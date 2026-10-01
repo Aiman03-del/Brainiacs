@@ -1,26 +1,107 @@
 @import "tailwindcss";
 
+/* ==========================================================
+   COLOR PALETTE
+   Change the values below to restyle the whole app.
+   ========================================================== */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Page and surfaces */
+  --background: #f9fafb;
+  --foreground: #111827;
+  --surface: #ffffff;
+  --surface-muted: #f3f4f6;
+  --surface-hover: #f9fafb;
+  --border: #d1d5db;
+  --muted: #6b7280;
+
+  /* Brand */
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-foreground: #ffffff;
+
+  /* Secondary (dark button in light theme) */
+  --secondary: #111827;
+  --secondary-hover: #000000;
+  --secondary-foreground: #ffffff;
+
+  /* Status */
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+  --success: #16a34a;
+
+  /* Modal backdrop */
+  --overlay: rgb(0 0 0 / 0.4);
+}
+
+/* ---------- Theme: dark ---------- */
+[data-theme="dark"] {
+  --background: #0b1220;
+  --foreground: #e5e7eb;
+  --surface: #111827;
+  --surface-muted: #1f2937;
+  --surface-hover: #1f2937;
+  --border: #374151;
+  --muted: #9ca3af;
+
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-foreground: #ffffff;
+
+  --secondary: #e5e7eb;
+  --secondary-hover: #ffffff;
+  --secondary-foreground: #111827;
+
+  --danger: #f87171;
+  --danger-soft: #3b1d1d;
+  --success: #4ade80;
+
+  --overlay: rgb(0 0 0 / 0.6);
+}
+
+/* ---------- Theme: emerald (only changes the brand color) ---------- */
+[data-theme="emerald"] {
+  --primary: #059669;
+  --primary-hover: #047857;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-hover: var(--surface-hover);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+
+  --color-overlay: var(--overlay);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  /* Tailwind v4 default border color is currentColor; use our palette instead */
+  *,
+  ::after,
+  ::before {
+    border-color: var(--border);
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  }
 }
