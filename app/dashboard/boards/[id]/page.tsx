@@ -83,6 +83,15 @@ export default async function BoardPage({
         />
       </div>
 
+      <div className="mb-4 flex justify-end">
+        <Link
+          href={`/dashboard/messenger/${board.id}`}
+          className="text-sm font-medium text-primary"
+        >
+          Open channel conversation
+        </Link>
+      </div>
+
       <KanbanBoard
         boardId={board.id}
         userId={user.id}

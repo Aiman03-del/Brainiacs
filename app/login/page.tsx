@@ -31,7 +31,18 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/dashboard");
+      const requestedPath = new URLSearchParams(window.location.search).get(
+        "next",
+      );
+      let destination = "/dashboard";
+      if (requestedPath) {
+        const target = new URL(requestedPath, window.location.origin);
+        if (target.origin === window.location.origin) {
+          destination = `${target.pathname}${target.search}${target.hash}`;
+        }
+      }
+
+      router.push(destination);
       router.refresh();
     } catch {
       setError("Unable to log in. Please try again.");

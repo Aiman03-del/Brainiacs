@@ -35,3 +35,16 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 # Brainiacs
+
+## Application Routes
+
+The authenticated product lives under `/dashboard`, which preserves the existing route boundary and lets the dashboard layout own one shared navigation shell. Boards are Brainiacs' collaboration units: each board has its existing Kanban view at `/dashboard/boards/[id]` and channel conversation at `/dashboard/messenger/[boardId]`. The Tasks entry is an index into those Kanban views, not a second task implementation.
+
+- Public: `/`, `/about`, `/pricing`, `/faq`
+- Authentication: `/login`, `/signup`, and `/auth/callback`
+- Workspace: `/dashboard`, `/dashboard/boards`, `/dashboard/messenger`
+- Work and tools: `/dashboard/tasks`, `/dashboard/activity`, `/dashboard/ai`, `/dashboard/search`
+- Account: `/dashboard/profile`, `/dashboard/settings`
+- Existing secondary feature: `/dashboard/leaderboard`
+
+Direct messages and workspace-wide search are not backed by existing data or behavior. The navigation therefore routes to board conversations and a clearly marked search foundation instead of advertising nonfunctional features. The dashboard proxy performs early auth redirects; authenticated layouts and data pages retain server-side checks.

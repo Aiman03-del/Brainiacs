@@ -32,13 +32,17 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   const user = data?.claims;
   const path = request.nextUrl.pathname;
 
-  if (!user && path.startsWith("/dashboard")) {
+  const isAppRoute = path === "/dashboard" || path.startsWith("/dashboard/");
+  const isAuthRoute = path === "/login" || path === "/signup";
+
+  if (!user && isAppRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    url.searchParams.set("next", path);
     return NextResponse.redirect(url);
   }
 
-  if (user && (path === "/login" || path === "/signup")) {
+  if (user && isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
