@@ -93,7 +93,11 @@ export default function AiChat() {
   };
 
   const handleKeyDown = (event) => {
-    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+    if (
+      event.key === "Enter" &&
+      !event.shiftKey &&
+      !event.nativeEvent.isComposing
+    ) {
       event.preventDefault();
       send(input);
     }
@@ -149,7 +153,11 @@ export default function AiChat() {
                       : "bg-surface-muted text-foreground"
                   }`}
                 >
-                  {waiting ? <span className="text-muted">Thinking...</span> : message.content}
+                  {waiting ? (
+                    <span className="text-muted">Thinking...</span>
+                  ) : (
+                    message.content
+                  )}
                 </div>
               </div>
             );

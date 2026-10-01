@@ -25,7 +25,9 @@ const hits = new Map();
 
 function isRateLimited(userId) {
   const now = Date.now();
-  const recent = (hits.get(userId) ?? []).filter((time) => now - time < WINDOW_MS);
+  const recent = (hits.get(userId) ?? []).filter(
+    (time) => now - time < WINDOW_MS,
+  );
   if (recent.length >= RATE_LIMIT) {
     hits.set(userId, recent);
     return true;
@@ -47,7 +49,8 @@ function parseMessages(body) {
     ) {
       return null;
     }
-    const limit = message.role === "user" ? MAX_USER_CHARS : MAX_ASSISTANT_CHARS;
+    const limit =
+      message.role === "user" ? MAX_USER_CHARS : MAX_ASSISTANT_CHARS;
     const content = message.content.trim().slice(0, limit);
     if (content) cleaned.push({ role: message.role, content });
   }
