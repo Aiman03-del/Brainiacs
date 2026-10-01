@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Bell } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { BoardInvite } from "@/types";
 
@@ -93,8 +94,9 @@ export default function InvitesBell({
         onClick={() => setOpen((previous) => !previous)}
         aria-label={`Invitations${invites.length ? `, ${invites.length} pending` : ""}`}
         aria-expanded={open}
-        className="relative rounded-lg border border-border px-3 py-1.5 text-sm text-foreground hover:bg-surface-hover"
+        className="relative inline-flex min-h-10 items-center gap-2 rounded-lg border border-border px-3 text-sm text-foreground hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
+        <Bell aria-hidden="true" className="h-4 w-4" />
         Invites
         {invites.length > 0 && (
           <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 text-xs font-semibold text-primary-foreground">

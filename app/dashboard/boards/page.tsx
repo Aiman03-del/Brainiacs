@@ -25,8 +25,11 @@ export default async function BoardsPage() {
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Your boards</h1>
-        <CreateBoardButton />
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Channels</h1>
+          <p className="mt-1 text-sm text-muted">Boards are the channels your team works in.</p>
+        </div>
+        <CreateBoardButton label="Create channel" />
       </div>
 
       {error && (

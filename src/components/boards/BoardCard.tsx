@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Hash, Lock, MessageSquare } from "lucide-react";
 import { useState, useTransition } from "react";
 import BoardFormModal from "./BoardFormModal";
 import {
@@ -47,7 +48,12 @@ export default function BoardCard({
     >
       <div className="flex items-start justify-between gap-2">
         <h3 className="text-lg font-semibold">{board.name}</h3>
-        <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs text-muted">
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-surface-muted px-2 py-0.5 text-xs text-muted">
+          {board.visibility === "Private" ? (
+            <Lock aria-hidden="true" className="h-3 w-3" />
+          ) : (
+            <Hash aria-hidden="true" className="h-3 w-3" />
+          )}
           {board.visibility}
         </span>
       </div>
@@ -72,6 +78,14 @@ export default function BoardCard({
           className="rounded-lg bg-secondary px-3 py-1.5 text-sm text-secondary-foreground hover:bg-secondary-hover"
         >
           Open
+          Open board
+        </Link>
+        <Link
+          href={`/dashboard/messenger/${board.id}`}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm text-foreground hover:bg-surface-hover"
+        >
+          <MessageSquare aria-hidden="true" className="h-4 w-4" />
+          Open channel
         </Link>
 
         {isOwner && (

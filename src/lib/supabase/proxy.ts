@@ -31,14 +31,27 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
   const path = request.nextUrl.pathname;
-
-  const isAppRoute = path === "/dashboard" || path.startsWith("/dashboard/");
-  const isAuthRoute = path === "/login" || path === "/signup";
+  const protectedPrefixes = [
+    "/dashboard",
+    "/channels",
+    "/dm",
+    "/ai",
+    "/tasks",
+    "/activity",
+    "/profile",
+    "/settings",
+  ];
+  const isAppRoute = protectedPrefixes.some(
+    (prefix) => path === prefix || path.startsWith(`${prefix}/`),
+  );
+  const isAuthRoute =
+    path === "/login" || path === "/signup" || path === "/forgot-password";
 
   if (!user && isAppRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("next", path);
+    url.search = "";
+    url.searchParams.set("next", `${path}${request.nextUrl.search}`);
     return NextResponse.redirect(url);
   }
 

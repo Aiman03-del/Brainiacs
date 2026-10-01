@@ -65,8 +65,8 @@ export default function PollModal({ onCreate, onClose }: PollModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4">
-      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-surface p-6 shadow-xl">
-        <h2 className="mb-4 text-xl font-bold text-foreground">
+      <div role="dialog" aria-modal="true" aria-labelledby="poll-dialog-title" className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-surface p-6 shadow-xl">
+        <h2 id="poll-dialog-title" className="mb-4 text-xl font-bold text-foreground">
           Create a poll
         </h2>
 
@@ -74,6 +74,8 @@ export default function PollModal({ onCreate, onClose }: PollModalProps) {
           <input
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
+            aria-label="Poll question"
+            required
             maxLength={200}
             placeholder="Ask a question"
             className={fieldClass}
@@ -85,6 +87,7 @@ export default function PollModal({ onCreate, onClose }: PollModalProps) {
                 <input
                   value={option}
                   onChange={(event) => setOption(index, event.target.value)}
+                  aria-label={`Option ${index + 1}`}
                   maxLength={100}
                   placeholder={`Option ${index + 1}`}
                   className={fieldClass}

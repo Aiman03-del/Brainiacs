@@ -11,7 +11,10 @@ export type MessageRow = Database["public"]["Tables"]["messages"]["Row"];
 export type PollRow = Database["public"]["Tables"]["polls"]["Row"];
 export type PollVote = Database["public"]["Tables"]["poll_votes"]["Row"];
 
-export type BoardSummary = Pick<Board, "id" | "name" | "theme">;
+export type BoardSummary = Pick<
+  Board,
+  "id" | "name" | "theme" | "visibility" | "description"
+>;
 export type ActivityBoardSummary = Pick<Board, "id" | "name">;
 
 export type BoardWithMembers = Pick<

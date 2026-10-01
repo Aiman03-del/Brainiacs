@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { ArrowDown, ChevronRight, Hash, LoaderCircle, Lock, MessageSquare, Pin, Search, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import MessageItem from "./MessageItem";
 import MessageInput from "./MessageInput";
@@ -31,6 +33,7 @@ interface ChatWindowProps {
   initialMessages: Message[];
   initialPolls: Poll[];
   pageSize: number;
+  initialLoadError?: boolean;
 }
 
 function toMessage(row: MessageDatabaseRow): Message {
@@ -59,6 +62,7 @@ export default function ChatWindow({
   initialMessages,
   initialPolls,
   pageSize,
+  initialLoadError = false,
 }: ChatWindowProps) {
   const [supabase] = useState(() => createClient());
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -70,6 +74,9 @@ export default function ChatWindow({
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResults | null>(null);
   const [error, setError] = useState("");
+  const [loadFailed, setLoadFailed] = useState(initialLoadError);
+  const [retrying, setRetrying] = useState(false);
+  const [hasNewMessages, setHasNewMessages] = useState(false);
 
   const listRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -92,6 +99,7 @@ export default function ChatWindow({
         },
         (payload) => {
           const message = toMessage(payload.new as unknown as MessageDatabaseRow);
+          if (!stickRef.current) setHasNewMessages(true);
           setMessages((previous) =>
             previous.some((entry) => entry.id === message.id)
               ? previous
@@ -188,8 +196,49 @@ export default function ChatWindow({
   const handleScroll = () => {
     const element = listRef.current;
     if (!element) return;
-    stickRef.current =
-      element.scrollHeight - element.scrollTop - element.clientHeight < 120;
+    stickRef.current = element.scrollHeight - element.scrollTop - element.clientHeight < 120;
+    if (stickRef.current) setHasNewMessages(false);
+  };
+
+  const retryInitialLoad = async () => {
+    if (retrying) return;
+    setRetrying(true);
+    const [messagesResult, pollsResult] = await Promise.all([
+      supabase
+        .from("messages")
+        .select("*")
+        .eq("board_id", board.id)
+        .order("created_at", { ascending: false })
+        .limit(pageSize),
+      supabase
+        .from("polls")
+        .select("*, poll_votes(user_id, option_index)")
+        .eq("board_id", board.id)
+        .order("created_at", { ascending: false }),
+    ]);
+    setRetrying(false);
+
+    if (messagesResult.error || pollsResult.error) {
+      setLoadFailed(true);
+      return;
+    }
+
+    const refreshedMessages = (messagesResult.data ?? [])
+      .slice()
+      .reverse()
+      .map((row) => toMessage(row as MessageDatabaseRow));
+    setMessages(refreshedMessages);
+    setPolls((pollsResult.data ?? []).map((row) => toPoll(row as PollDatabaseRow, row.poll_votes ?? [])));
+    setHasMore((messagesResult.data ?? []).length >= pageSize);
+    setLoadFailed(false);
+    setError("");
+    stickRef.current = true;
+  };
+
+  const scrollToLatest = () => {
+    stickRef.current = true;
+    setHasNewMessages(false);
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   };
 
   const cleanQuery = query.replace(/[%_\\]/g, "").trim();
@@ -212,7 +261,7 @@ export default function ChatWindow({
 
       if (cancelled) return;
       if (searchError) {
-        setError(searchError.message);
+        setError("Unable to search messages. Please try again.");
         return;
       }
       setResults({
@@ -244,7 +293,7 @@ export default function ChatWindow({
     setLoadingMore(false);
 
     if (loadError) {
-      setError(loadError.message);
+      setError("Unable to load older messages. Please try again.");
       return;
     }
 
@@ -276,7 +325,7 @@ export default function ChatWindow({
         .from(BUCKET)
         .upload(path, file, { contentType: file.type || undefined });
 
-      if (uploadError) return uploadError.message;
+      if (uploadError) return "Unable to upload this attachment. Please try again.";
 
       attachments = [
         { path, name: file.name, type: file.type, size: file.size },
@@ -300,10 +349,11 @@ export default function ChatWindow({
           .from(BUCKET)
           .remove(attachments.map((attachment) => attachment.path));
       }
-      return insertError.message;
+      return "Unable to send this message. Please try again.";
     }
 
     stickRef.current = true;
+    setHasNewMessages(false);
     setMessages((previous) =>
       previous.some((message) => message.id === data.id)
         ? previous
@@ -323,7 +373,7 @@ export default function ChatWindow({
       .select()
       .single();
 
-    if (updateError) return updateError.message;
+    if (updateError) return "Unable to edit this message. Please try again.";
     setMessages((previous) =>
       previous.map((message) =>
         message.id === id ? toMessage(data) : message,
@@ -333,7 +383,6 @@ export default function ChatWindow({
   };
 
   const deleteMessage = async (id: string): Promise<void> => {
-    if (!window.confirm("Delete this message?")) return;
     setError("");
 
     const target = messages.find((message) => message.id === id);
@@ -353,7 +402,7 @@ export default function ChatWindow({
       .single();
 
     if (updateError) {
-      setError(updateError.message);
+      setError("Unable to delete this message. Please try again.");
       return;
     }
 
@@ -376,7 +425,7 @@ export default function ChatWindow({
     });
 
     if (rpcError) {
-      setError(rpcError.message);
+      setError("Unable to update the reaction. Please try again.");
       return;
     }
     setMessages((previous) =>
@@ -396,7 +445,7 @@ export default function ChatWindow({
     });
 
     if (rpcError) {
-      setError(rpcError.message);
+      setError("Unable to update the pinned state. Please try again.");
       return;
     }
     setMessages((previous) =>
@@ -416,7 +465,7 @@ export default function ChatWindow({
       .select()
       .single();
 
-    if (insertError) return insertError.message;
+    if (insertError) return "Unable to create this poll. Please try again.";
 
     setPolls((previous) =>
       previous.some((poll) => poll.id === data.id)
@@ -439,7 +488,7 @@ export default function ChatWindow({
       );
 
     if (voteError) {
-      setError(voteError.message);
+      setError("Unable to record your vote. Please try again.");
       return;
     }
 
@@ -488,40 +537,79 @@ export default function ChatWindow({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-3 border-b px-4 py-3">
-        <span
-          className="h-3 w-3 shrink-0 rounded-full"
-          style={{ backgroundColor: board.theme }}
-        />
-        <h2 className="min-w-0 flex-1 truncate font-semibold text-foreground">
-          {board.name}
-        </h2>
+      <div className="flex flex-wrap items-center gap-2 border-b px-3 py-3 sm:gap-3 sm:px-4">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <Link
+            href="/dashboard/messenger"
+            className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-md px-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+          >
+            Channels
+            <ChevronRight aria-hidden="true" className="h-3.5 w-3.5" />
+          </Link>
+          {board.visibility === "Private" ? (
+            <span role="img" aria-label="Private channel" title="Private channel" className="shrink-0 text-muted">
+              <Lock aria-hidden="true" className="h-4 w-4" />
+            </span>
+          ) : (
+            <span role="img" aria-label="Public channel" title="Public channel" className="shrink-0 text-muted">
+              <Hash aria-hidden="true" className="h-4 w-4" />
+            </span>
+          )}
+          <div className="min-w-0">
+            <h2 className="truncate text-sm font-semibold text-foreground sm:text-base">
+              {board.name}
+            </h2>
+            {board.description && (
+              <p className="hidden truncate text-xs text-muted sm:block">{board.description}</p>
+            )}
+          </div>
+        </div>
 
-        <button
-          type="button"
-          onClick={() => setShowPinned((previous) => !previous)}
-          className="rounded-lg border border-border px-3 py-1.5 text-sm text-foreground hover:bg-surface-hover"
-        >
-          Pinned ({pinned.length})
-        </button>
-
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search messages"
-          aria-label="Search messages"
-          className="w-44 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-foreground placeholder:text-muted"
-        />
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <Link
+            href={`/dashboard/boards/${board.id}`}
+            aria-label={`Members, ${Object.keys(members).length} total`}
+            title={`Members (${Object.keys(members).length})`}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-md px-2 text-sm text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+          >
+            <Users aria-hidden="true" className="h-4 w-4" />
+            <span className="hidden text-xs sm:inline">{Object.keys(members).length}</span>
+          </Link>
+          <button
+            type="button"
+            onClick={() => setShowPinned((previous) => !previous)}
+            aria-label={`Pinned items, ${pinned.length}`}
+            aria-pressed={showPinned}
+            title={`Pinned (${pinned.length})`}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-md px-2 text-sm text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+          >
+            <Pin aria-hidden="true" className="h-4 w-4" />
+            <span className="hidden text-xs sm:inline">{pinned.length}</span>
+          </button>
+          <label className="flex h-9 w-32 items-center gap-1.5 rounded-md border border-border bg-surface px-2 sm:w-44">
+            <Search aria-hidden="true" className="h-4 w-4 shrink-0 text-muted" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search messages"
+              aria-label="Search messages"
+              className="min-w-0 flex-1 bg-transparent text-xs text-foreground outline-none placeholder:text-muted"
+            />
+          </label>
+        </div>
       </div>
 
-      {error && (
-        <p
-          role="alert"
-          className="border-b bg-danger-soft px-4 py-2 text-sm text-danger"
-        >
-          {error}
-        </p>
-      )}
+      {loadFailed ? (
+        <div role="alert" className="flex items-center justify-between gap-3 border-b bg-danger-soft px-4 py-2 text-sm text-danger">
+          <span>Unable to load messages.</span>
+          <button type="button" onClick={retryInitialLoad} disabled={retrying} className="inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-md px-2 font-medium hover:bg-surface/60 disabled:opacity-60">
+            {retrying && <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />}
+            Try again
+          </button>
+        </div>
+      ) : error ? (
+        <p role="alert" className="border-b bg-danger-soft px-4 py-2 text-sm text-danger">{error}</p>
+      ) : null}
 
       <PollsPanel
         polls={polls}
@@ -564,7 +652,7 @@ export default function ChatWindow({
       <div
         ref={listRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto py-2"
+        className="relative min-h-0 flex-1 overflow-y-auto py-2"
       >
         {searching ? (
           searchRows === null ? (
@@ -586,7 +674,7 @@ export default function ChatWindow({
               </div>
             ))
           )
-        ) : (
+        ) : loadFailed ? null : (
           <>
             {hasMore && (
               <div className="py-2 text-center">
@@ -596,38 +684,70 @@ export default function ChatWindow({
                   disabled={loadingMore}
                   className="rounded-lg border border-border px-3 py-1 text-xs text-foreground hover:bg-surface-hover disabled:opacity-60"
                 >
-                  {loadingMore ? "Loading..." : "Load older messages"}
+                  {loadingMore ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <LoaderCircle aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
+                      Loading older messages...
+                    </span>
+                  ) : "Load older messages"}
                 </button>
               </div>
             )}
 
             {messages.length === 0 && (
-              <p className="p-6 text-center text-sm text-muted">
-                No messages yet. Say hello!
-              </p>
+              <div className="flex min-h-48 flex-col items-center justify-center px-6 py-10 text-center">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-muted text-muted">
+                  <MessageSquare aria-hidden="true" className="h-5 w-5" />
+                </span>
+                <h3 className="mt-3 text-sm font-semibold text-foreground">Start the conversation</h3>
+                <p className="mt-1 text-sm text-muted">Send the first message to your team.</p>
+              </div>
             )}
-
-            {messages.map((message) => (
-              <MessageItem
-                key={message.id}
-                message={message}
-                senderName={nameOf(message.sender_id)}
-                userId={userId}
-                supabase={supabase}
-                onReact={reactToMessage}
-                onEdit={editMessage}
-                onDelete={deleteMessage}
-                onPin={pinMessage}
-              />
-            ))}
+            {messages.map((message, index) => {
+              const previous = messages[index - 1];
+              const grouped = Boolean(
+                previous &&
+                  !previous.deleted_at &&
+                  !message.deleted_at &&
+                  previous.sender_id === message.sender_id &&
+                  new Date(message.created_at).getTime() -
+                    new Date(previous.created_at).getTime() <
+                    5 * 60 * 1000,
+              );
+              return (
+                <MessageItem
+                  key={message.id}
+                  message={message}
+                  senderName={nameOf(message.sender_id)}
+                  senderPhoto={members[message.sender_id]?.photo ?? null}
+                  userId={userId}
+                  supabase={supabase}
+                  grouped={grouped}
+                  onReact={reactToMessage}
+                  onEdit={editMessage}
+                  onDelete={deleteMessage}
+                  onPin={pinMessage}
+                />
+              );
+            })}
             <div ref={bottomRef} />
           </>
+        )}
+        {hasNewMessages && !searching && (
+          <button
+            type="button"
+            onClick={scrollToLatest}
+            className="absolute bottom-3 left-1/2 inline-flex min-h-9 -translate-x-1/2 items-center gap-2 rounded-full border border-border bg-surface px-3 text-xs font-medium text-foreground shadow-sm hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-primary"
+          >
+            New messages <ArrowDown aria-hidden="true" className="h-4 w-4" />
+          </button>
         )}
       </div>
 
       <MessageInput
         onSend={sendMessage}
         onOpenPoll={() => setShowPollModal(true)}
+        autoFocus={messages.length === 0 && !loadFailed}
       />
 
       {showPollModal && (

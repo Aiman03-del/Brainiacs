@@ -36,7 +36,7 @@ export default async function BoardChatPage({
     await Promise.all([
       supabase
         .from("boards")
-        .select("id, name, theme")
+        .select("id, name, theme, visibility, description")
         .eq("id", boardId)
         .single(),
       supabase
@@ -90,6 +90,7 @@ export default async function BoardChatPage({
       initialMessages={initialMessages}
       initialPolls={initialPolls}
       pageSize={PAGE_SIZE}
+      initialLoadError={Boolean(messagesResult.error || pollsResult.error)}
     />
   );
 }

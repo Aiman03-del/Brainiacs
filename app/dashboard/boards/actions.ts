@@ -51,6 +51,7 @@ export async function createBoard(formData: FormData): Promise<ActionResult> {
   });
 
   revalidatePath("/dashboard/boards");
+  revalidatePath("/dashboard/messenger");
   return { success: true, id: data.id };
 }
 
