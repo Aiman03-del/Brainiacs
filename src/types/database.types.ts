@@ -97,6 +97,14 @@ type JoinRequestRow = {
   created_at: string;
 };
 
+type UserSettingsRow = {
+  user_id: string;
+  notify_invites: boolean;
+  notify_task_reminders: boolean;
+  allow_invites: "everyone" | "nobody";
+  updated_at: string;
+};
+
 type MessageRow = {
   id: string;
   board_id: string;
@@ -228,6 +236,12 @@ export type Database = {
           Relationship<"tasks_board_id_fkey", "board_id", "boards">,
           Relationship<"tasks_column_id_fkey", "column_id", "columns">,
         ]
+      >;
+      user_settings: Table<
+        UserSettingsRow,
+        Pick<UserSettingsRow, "user_id"> & Partial<UserSettingsRow>,
+        Partial<UserSettingsRow>,
+        [Relationship<"user_settings_user_id_fkey", "user_id", "profiles">]
       >;
     };
     Views: {

@@ -100,6 +100,8 @@ export default function MembersButton({
         setInvited((previous) =>
           previous.includes(profile.id) ? previous : [...previous, profile.id],
         );
+      } else if (insertError.message.includes("invites_disabled")) {
+        setError("This person is not accepting invitations.");
       } else {
         setError("Unable to send this invitation. Please try again.");
       }

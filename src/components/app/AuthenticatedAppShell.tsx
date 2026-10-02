@@ -15,8 +15,10 @@ import AccountMenu from "@/components/app/AccountMenu";
 import AppNavigation from "@/components/app/AppNavigation";
 import Avatar from "@/components/Avatar";
 import InvitesBell from "@/components/InvitesBell";
+import TaskReminders from "@/components/app/TaskReminders";
 import GlobalSearch from "@/components/search/GlobalSearch";
 import type { BoardInvite } from "@/types";
+import type { UserSettings } from "@/lib/settings";
 import { findNavigationItem } from "@/lib/navigation";
 
 interface AuthenticatedAppShellProps {
@@ -26,6 +28,7 @@ interface AuthenticatedAppShellProps {
   email: string;
   photoUrl: string | null;
   initialInvites: BoardInvite[];
+  settings: UserSettings;
 }
 
 export default function AuthenticatedAppShell({
@@ -35,6 +38,7 @@ export default function AuthenticatedAppShell({
   email,
   photoUrl,
   initialInvites,
+  settings,
 }: AuthenticatedAppShellProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
@@ -92,6 +96,7 @@ export default function AuthenticatedAppShell({
 
   return (
     <div className="min-h-screen bg-background lg:flex">
+      <TaskReminders userId={userId} enabled={settings.notify_task_reminders} />
       <aside
         className={`sticky top-0 hidden h-screen shrink-0 flex-col border-r border-border bg-surface px-3 py-4 transition-[width] duration-200 lg:flex ${collapsed ? "w-19" : "w-64"}`}
       >
@@ -163,7 +168,11 @@ export default function AuthenticatedAppShell({
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-3">
             <GlobalSearch />
-            <InvitesBell userId={userId} initialInvites={initialInvites} />
+            <InvitesBell
+              userId={userId}
+              initialInvites={initialInvites}
+              notifyOnInvite={settings.notify_invites}
+            />
             <Link
               href="/dashboard/profile"
               aria-label={`Open profile for ${name}`}

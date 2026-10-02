@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LockKeyhole, UserRound } from "lucide-react";
+import { Bell, LockKeyhole, Palette, ShieldCheck, UserRound } from "lucide-react";
 
 const sections = [
   { id: "account", label: "Account", icon: UserRound },
+  { id: "appearance", label: "Appearance", icon: Palette },
+  { id: "notifications", label: "Notifications", icon: Bell },
+  { id: "privacy", label: "Privacy", icon: ShieldCheck },
   { id: "security", label: "Security", icon: LockKeyhole },
 ] as const;
 

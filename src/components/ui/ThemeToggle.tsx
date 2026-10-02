@@ -1,39 +1,14 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
-
-const THEME_KEY = "brainiacs-theme";
-const THEME_EVENT = "brainiacs-theme-change";
-
-function subscribe(callback: () => void) {
-  window.addEventListener("storage", callback);
-  window.addEventListener(THEME_EVENT, callback);
-  return () => {
-    window.removeEventListener("storage", callback);
-    window.removeEventListener(THEME_EVENT, callback);
-  };
-}
-
-function getSnapshot() {
-  return window.localStorage.getItem(THEME_KEY) === "dark";
-}
-
-function getServerSnapshot() {
-  return false;
-}
+import { saveThemePreference } from "@/lib/theme";
+import { useIsDarkTheme } from "./useThemePreference";
 
 export function ThemeToggle() {
-  const dark = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = dark ? "dark" : "light";
-  }, [dark]);
+  const dark = useIsDarkTheme();
 
   const toggleTheme = () => {
-    const nextDark = !dark;
-    window.localStorage.setItem(THEME_KEY, nextDark ? "dark" : "light");
-    window.dispatchEvent(new Event(THEME_EVENT));
+    saveThemePreference(dark ? "light" : "dark");
   };
 
   return (

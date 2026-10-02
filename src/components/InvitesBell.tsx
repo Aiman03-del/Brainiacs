@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Bell, Check, Clock3, Users, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { BoardInvite } from "@/types";
@@ -9,20 +10,27 @@ import type { BoardInvite } from "@/types";
 interface InvitesBellProps {
   userId: string;
   initialInvites: BoardInvite[];
+  notifyOnInvite?: boolean;
 }
 
 export default function InvitesBell({
   userId,
   initialInvites,
+  notifyOnInvite = true,
 }: InvitesBellProps) {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
   const [invites, setInvites] = useState<BoardInvite[]>(initialInvites);
+  const notifyRef = useRef(notifyOnInvite);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    notifyRef.current = notifyOnInvite;
+  }, [notifyOnInvite]);
 
   const refetch = useCallback(async () => {
     const { data } = await supabase
@@ -48,8 +56,13 @@ export default function InvitesBell({
           table: "join_requests",
           filter: `receiver_id=eq.${userId}`,
         },
-        () => {
+        (payload) => {
           refetch();
+          if (payload.eventType === "INSERT" && notifyRef.current) {
+            toast("New board invitation", {
+              description: "Open notifications to accept or decline.",
+            });
+          }
         },
       )
       .subscribe();
