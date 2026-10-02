@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { Camera, RotateCcw } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Avatar from "@/components/Avatar";
 import type { Profile } from "@/types";
@@ -36,6 +37,7 @@ interface ProfileFormProps {
 export default function ProfileForm({ userId, profile }: ProfileFormProps) {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
+  const [savedProfile, setSavedProfile] = useState(profile);
   const [name, setName] = useState(profile.display_name ?? "");
   const [file, setFile] = useState<ImageFile | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -44,6 +46,10 @@ export default function ProfileForm({ userId, profile }: ProfileFormProps) {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const dirty =
+    name !== (savedProfile.display_name ?? "") ||
+    file !== null ||
+    removePhoto;
 
   useEffect(() => {
     return () => {
@@ -75,6 +81,7 @@ export default function ProfileForm({ userId, profile }: ProfileFormProps) {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (busy) return;
     setError("");
     setMessage("");
 
@@ -86,13 +93,13 @@ export default function ProfileForm({ userId, profile }: ProfileFormProps) {
 
     setBusy(true);
 
-    let photoUrl = profile.photo_url;
-    let uploadedPath = null;
-    let oldPath = null;
+    let photoUrl = savedProfile.photo_url;
+    let uploadedPath: string | null = null;
+    let oldPath: string | null = null;
 
     if (removePhoto) {
       photoUrl = null;
-      oldPath = pathFromUrl(profile.photo_url);
+      oldPath = pathFromUrl(savedProfile.photo_url);
     }
 
     try {
@@ -103,14 +110,14 @@ export default function ProfileForm({ userId, profile }: ProfileFormProps) {
           .upload(path, file, { contentType: file.type });
 
         if (uploadError) {
-          setError(uploadError.message);
+          setError("Unable to upload this photo. Please try another image.");
           return;
         }
 
         uploadedPath = path;
         photoUrl = supabase.storage.from("avatars").getPublicUrl(path)
           .data.publicUrl;
-        oldPath = pathFromUrl(profile.photo_url);
+        oldPath = pathFromUrl(savedProfile.photo_url);
       }
 
       const { error: updateError } = await supabase
@@ -122,7 +129,7 @@ export default function ProfileForm({ userId, profile }: ProfileFormProps) {
         if (uploadedPath) {
           await supabase.storage.from("avatars").remove([uploadedPath]);
         }
-        setError(updateError.message);
+        setError("Unable to save your profile. Please try again.");
         return;
       }
 
@@ -137,6 +144,8 @@ export default function ProfileForm({ userId, profile }: ProfileFormProps) {
       setFile(null);
       setPreview(null);
       setRemovePhoto(false);
+      setName(cleanName);
+      setSavedProfile({ ...savedProfile, display_name: cleanName, photo_url: photoUrl });
       setMessage("Profile updated.");
       router.refresh();
     } catch {
@@ -149,36 +158,48 @@ export default function ProfileForm({ userId, profile }: ProfileFormProps) {
     }
   };
 
-  const shownPhoto = removePhoto ? null : (preview ?? profile.photo_url);
+  const resetChanges = () => {
+    setName(savedProfile.display_name ?? "");
+    setFile(null);
+    setPreview(null);
+    setRemovePhoto(false);
+    setError("");
+    setMessage("");
+  };
+
+  const shownPhoto = removePhoto ? null : (preview ?? savedProfile.photo_url);
   const fieldClass =
-    "w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted";
+    "w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-5 rounded-2xl border bg-surface p-6"
+      className="space-y-5 border-y border-border py-5"
     >
-      <h2 className="text-lg font-semibold text-foreground">Profile</h2>
+      <h3 className="text-base font-semibold text-foreground">Personal information</h3>
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <Avatar name={name || profile.email} src={shownPhoto} size={72} />
         <div className="space-y-2">
           <input
             ref={fileRef}
             type="file"
+            aria-label="Choose a profile photo"
             accept="image/jpeg,image/png,image/webp"
             onChange={pickFile}
             className="hidden"
           />
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="rounded-lg border border-border px-3 py-1.5 text-sm text-foreground hover:bg-surface-hover"
+              disabled={busy}
+              className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-border px-3 text-sm text-foreground hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
             >
+              <Camera aria-hidden="true" className="h-4 w-4" />
               Change photo
             </button>
-            {(profile.photo_url || preview) && !removePhoto && (
+            {(savedProfile.photo_url || preview) && !removePhoto && (
               <button
                 type="button"
                 onClick={() => {
@@ -186,7 +207,8 @@ export default function ProfileForm({ userId, profile }: ProfileFormProps) {
                   setPreview(null);
                   setRemovePhoto(true);
                 }}
-                className="rounded-lg border border-danger px-3 py-1.5 text-sm text-danger hover:bg-danger-soft"
+                disabled={busy}
+                className="min-h-10 rounded-lg border border-danger px-3 text-sm text-danger hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
               >
                 Remove
               </button>
@@ -197,26 +219,32 @@ export default function ProfileForm({ userId, profile }: ProfileFormProps) {
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-foreground">
+        <label htmlFor="profile-display-name" className="mb-1 block text-sm font-medium text-foreground">
           Display name
         </label>
         <input
+          id="profile-display-name"
           value={name}
           onChange={(event) => setName(event.target.value)}
+          autoComplete="name"
           maxLength={50}
           required
+          disabled={busy}
           className={fieldClass}
         />
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-foreground">
+        <label htmlFor="profile-email" className="mb-1 block text-sm font-medium text-foreground">
           Email
         </label>
         <input
+          id="profile-email"
+          type="email"
           value={profile.email ?? ""}
-          disabled
-          className={`${fieldClass} cursor-not-allowed opacity-70`}
+          readOnly
+          autoComplete="email"
+          className={`${fieldClass} bg-surface-muted`}
         />
       </div>
 
@@ -226,18 +254,31 @@ export default function ProfileForm({ userId, profile }: ProfileFormProps) {
         </p>
       )}
       {message && (
-        <p role="status" className="text-sm text-success">
+        <p role="status" aria-live="polite" className="text-sm text-success">
           {message}
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={busy}
-        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-60"
-      >
-        {busy ? "Saving..." : "Save changes"}
-      </button>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="submit"
+          disabled={busy || !dirty}
+          className="min-h-11 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {busy ? "Uploading and saving..." : "Save changes"}
+        </button>
+        {dirty && (
+          <button
+            type="button"
+            onClick={resetChanges}
+            disabled={busy}
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-border px-4 text-sm font-medium text-foreground hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+          >
+            <RotateCcw aria-hidden="true" className="h-4 w-4" />
+            Discard changes
+          </button>
+        )}
+      </div>
     </form>
   );
 }

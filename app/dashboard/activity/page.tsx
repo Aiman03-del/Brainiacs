@@ -1,12 +1,31 @@
+import { Suspense } from "react";
+import { Activity as ActivityIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import ActivityFeed from "@/components/activity/ActivityFeed";
+import ActivityFeed, {
+  ActivitySkeleton,
+} from "@/components/activity/ActivityFeed";
 import {
   ACTIVITY_PAGE_SIZE,
   ACTIVITY_SELECT,
 } from "@/components/activity/constants";
 
-export default async function ActivityPage() {
+export default function ActivityPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-3xl">
+          <ActivityPageHeader />
+          <ActivitySkeleton />
+        </div>
+      }
+    >
+      <ActivityPageContent />
+    </Suspense>
+  );
+}
+
+async function ActivityPageContent() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -33,16 +52,29 @@ export default async function ActivityPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="mb-1 text-2xl font-bold text-foreground">Activity log</h1>
-      <p className="mb-6 text-sm text-muted">
-        Everything that happens on your boards, newest first.
-      </p>
-
+      <ActivityPageHeader />
       <ActivityFeed
         boards={boards}
         initialRows={activitiesResult.data ?? []}
+        initialError={Boolean(activitiesResult.error)}
         userId={user.id}
       />
     </div>
+  );
+}
+
+function ActivityPageHeader() {
+  return (
+    <header className="mb-5 flex items-start gap-3">
+      <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-muted">
+        <ActivityIcon aria-hidden="true" className="h-5 w-5" />
+      </span>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Activity</h1>
+        <p className="mt-1 text-sm text-muted">
+          Stay up to date with what&apos;s happening across your workspace.
+        </p>
+      </div>
+    </header>
   );
 }

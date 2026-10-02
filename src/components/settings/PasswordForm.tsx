@@ -14,6 +14,7 @@ export default function PasswordForm() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (busy) return;
     setError("");
     setMessage("");
 
@@ -32,7 +33,7 @@ export default function PasswordForm() {
         password,
       });
       if (updateError) {
-        setError(updateError.message);
+        setError("Unable to update your password. Please try again.");
         return;
       }
 
@@ -47,31 +48,47 @@ export default function PasswordForm() {
   };
 
   const fieldClass =
-    "w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted";
+    "w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 rounded-2xl border bg-surface p-6"
+      className="space-y-4 border-y border-border py-5"
     >
-      <h2 className="text-lg font-semibold text-foreground">Password</h2>
+      <h3 className="text-base font-semibold text-foreground">Change password</h3>
 
-      <input
-        type="password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        placeholder="New password"
-        autoComplete="new-password"
-        className={fieldClass}
-      />
-      <input
-        type="password"
-        value={confirm}
-        onChange={(event) => setConfirm(event.target.value)}
-        placeholder="Confirm new password"
-        autoComplete="new-password"
-        className={fieldClass}
-      />
+      <div className="space-y-1.5">
+        <label htmlFor="new-password" className="block text-sm font-medium text-foreground">
+          New password
+        </label>
+        <input
+          id="new-password"
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          autoComplete="new-password"
+          minLength={8}
+          required
+          disabled={busy}
+          className={fieldClass}
+        />
+      </div>
+      <div className="space-y-1.5">
+        <label htmlFor="confirm-password" className="block text-sm font-medium text-foreground">
+          Confirm new password
+        </label>
+        <input
+          id="confirm-password"
+          type="password"
+          value={confirm}
+          onChange={(event) => setConfirm(event.target.value)}
+          autoComplete="new-password"
+          minLength={8}
+          required
+          disabled={busy}
+          className={fieldClass}
+        />
+      </div>
 
       {error && (
         <p role="alert" className="text-sm text-danger">
@@ -79,15 +96,15 @@ export default function PasswordForm() {
         </p>
       )}
       {message && (
-        <p role="status" className="text-sm text-success">
+        <p role="status" aria-live="polite" className="text-sm text-success">
           {message}
         </p>
       )}
 
       <button
         type="submit"
-        disabled={busy}
-        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-60"
+        disabled={busy || !password || !confirm}
+        className="min-h-11 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
       >
         {busy ? "Updating..." : "Update password"}
       </button>

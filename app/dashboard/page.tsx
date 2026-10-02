@@ -82,7 +82,13 @@ async function DashboardContent({
       .eq("user_id", userId),
   ]);
 
-  if (profileResult.error || membershipsResult.error) return <DashboardError />;
+  if (profileResult.error || membershipsResult.error) {
+    console.error(
+      "Dashboard query failed:",
+      profileResult.error ?? membershipsResult.error,
+    );
+    return <DashboardError />;
+  }
 
   const memberships = membershipsResult.data ?? [];
   const boards = memberships
@@ -135,13 +141,16 @@ async function DashboardContent({
           .in("board_id", boardIds),
       ]);
 
-    if (
-      activitiesResult.error ||
-      messagesResult.error ||
-      tasksResult.error ||
-      completedResult.error ||
-      membersResult.error
-    ) {
+    const failed = [
+      activitiesResult,
+      messagesResult,
+      tasksResult,
+      completedResult,
+      membersResult,
+    ].find((result) => result.error);
+
+    if (failed) {
+      console.error("Dashboard query failed:", failed.error);
       return <DashboardError />;
     }
 
@@ -266,14 +275,14 @@ async function DashboardContent({
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
                 <h2 id="recent-activity-title" className="text-lg font-semibold text-foreground">
-                  Recent activity
+                  Recent Activity
                 </h2>
                 <p className="mt-0.5 text-sm text-muted">
                   The latest updates from your boards.
                 </p>
               </div>
               <Link href="/dashboard/activity" className="shrink-0 text-sm font-medium text-primary hover:underline">
-                View all
+                View all activity
               </Link>
             </div>
             {activities.length ? (

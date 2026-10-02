@@ -18,6 +18,8 @@
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
   --primary-foreground: #ffffff;
+  --primary-soft: #eff6ff;
+  --accent: #0f766e;
 
   /* Secondary (dark button in light theme) */
   --secondary: #111827;
@@ -28,6 +30,8 @@
   --danger: #dc2626;
   --danger-soft: #fef2f2;
   --success: #16a34a;
+  --warning: #a16207;
+  --warning-soft: #fef9c3;
 
   /* Modal backdrop */
   --overlay: rgb(0 0 0 / 0.4);
@@ -46,6 +50,8 @@
   --primary: #3b82f6;
   --primary-hover: #2563eb;
   --primary-foreground: #ffffff;
+  --primary-soft: #172554;
+  --accent: #5eead4;
 
   --secondary: #e5e7eb;
   --secondary-hover: #ffffff;
@@ -54,6 +60,8 @@
   --danger: #f87171;
   --danger-soft: #3b1d1d;
   --success: #4ade80;
+  --warning: #fde047;
+  --warning-soft: #422006;
 
   --overlay: rgb(0 0 0 / 0.6);
 }
@@ -76,6 +84,8 @@
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
+  --color-accent: var(--accent);
 
   --color-secondary: var(--secondary);
   --color-secondary-hover: var(--secondary-hover);
@@ -84,11 +94,29 @@
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+
+  --radius-card: 0.75rem;
+  --radius-control: 0.5rem;
+  --shadow-elev-1: 0 1px 2px rgb(17 24 39 / 0.08);
+  --shadow-elev-2: 0 8px 24px rgb(17 24 39 / 0.12);
+  --shadow-elev-3: 0 16px 48px rgb(17 24 39 / 0.2);
 
   --color-overlay: var(--overlay);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+@utility bg-brand-gradient {
+  background-image: linear-gradient(110deg, var(--primary), var(--accent));
+}
+
+@utility text-gradient {
+  background-image: linear-gradient(110deg, var(--primary), var(--accent));
+  background-clip: text;
+  color: transparent;
 }
 
 @layer base {

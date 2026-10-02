@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown } from "lucide-react";
@@ -30,19 +30,46 @@ export default function AccountMenu({
 }: AccountMenuProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const activeHref = APP_NAVIGATION.flatMap((group) => group.items).find(
     (item) =>
       pathname === item.href ||
       (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`)),
   )?.href;
 
+  useEffect(() => {
+    if (!open) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
   return (
-    <div className="relative min-w-0">
+    <div ref={containerRef} className="relative min-w-0">
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-label={`Account options for ${name}`}
         aria-expanded={open}
+        aria-controls="account-navigation-menu"
         title={collapsed ? `Account: ${name}` : undefined}
         className={`flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-left text-foreground transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${activeHref === "/dashboard/profile" ? "bg-surface-muted" : ""} ${collapsed ? "justify-center" : ""}`}
       >
@@ -60,6 +87,7 @@ export default function AccountMenu({
 
       {open && (
         <div
+          id="account-navigation-menu"
           className={`absolute bottom-full z-50 mb-2 w-60 rounded-xl border border-border bg-surface p-2 shadow-lg ${collapsed ? "left-full ml-2" : "left-0"}`}
         >
           <div className="border-b border-border px-3 py-2">

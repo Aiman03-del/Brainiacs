@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell } from "lucide-react";
+import { Bell, Check, Clock3, Users, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { BoardInvite } from "@/types";
 
@@ -21,6 +21,8 @@ export default function InvitesBell({
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const refetch = useCallback(async () => {
     const { data } = await supabase
@@ -57,6 +59,29 @@ export default function InvitesBell({
     };
   }, [supabase, userId, refetch]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
   const respond = async (
     id: string,
     status: "accepted" | "rejected",
@@ -88,61 +113,100 @@ export default function InvitesBell({
   };
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setOpen((previous) => !previous)}
-        aria-label={`Invitations${invites.length ? `, ${invites.length} pending` : ""}`}
+        aria-label={`Notifications${invites.length ? `, ${invites.length} pending board invitations` : ""}`}
         aria-expanded={open}
-        className="relative inline-flex min-h-10 items-center gap-2 rounded-lg border border-border px-3 text-sm text-foreground hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        aria-controls="board-invitations-panel"
+        title="Notifications"
+        className="relative inline-flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
-        <Bell aria-hidden="true" className="h-4 w-4" />
-        Invites
+        <Bell aria-hidden="true" className="h-5 w-5" />
         {invites.length > 0 && (
-          <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 text-xs font-semibold text-primary-foreground">
-            {invites.length}
+          <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold leading-none text-primary-foreground">
+            {invites.length > 99 ? "99+" : invites.length}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 z-40 mt-2 w-80 rounded-2xl border bg-surface p-3 shadow-xl">
-          <h3 className="mb-2 text-sm font-semibold text-foreground">
-            Board invitations
-          </h3>
+        <section
+          id="board-invitations-panel"
+          aria-label="Notifications"
+          className="fixed right-3 top-16 z-40 max-h-[min(32rem,calc(100dvh-5rem))] w-[min(22rem,calc(100vw-1.5rem))] overflow-y-auto rounded-xl border border-border bg-surface shadow-xl sm:absolute sm:right-0 sm:top-auto sm:mt-2"
+        >
+          <header className="flex items-center justify-between border-b border-border px-4 py-3">
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">
+                Notifications
+              </h2>
+              <p className="mt-0.5 text-xs text-muted">Board invitations</p>
+            </div>
+            {invites.length > 0 && (
+              <span className="rounded-full bg-surface-muted px-2 py-1 text-xs font-medium text-foreground">
+                {invites.length} pending
+              </span>
+            )}
+          </header>
 
           {invites.length === 0 ? (
-            <p className="py-4 text-center text-sm text-muted">
-              No pending invitations.
-            </p>
+            <div className="px-4 py-8 text-center">
+              <Bell aria-hidden="true" className="mx-auto h-5 w-5 text-muted" />
+              <p className="mt-2 text-sm font-medium text-foreground">
+                You&apos;re all caught up.
+              </p>
+            </div>
           ) : (
-            <ul className="space-y-2">
+            <ul className="divide-y divide-border">
               {invites.map((invite) => (
-                <li key={invite.id} className="rounded-lg border p-3">
-                  <p className="text-sm text-foreground">
-                    <span className="font-medium">
-                      {invite.sender?.display_name ?? "Someone"}
-                    </span>{" "}
-                    invited you to join{" "}
-                    <span className="font-medium">
-                      {invite.boards?.name ?? "a board"}
+                <li key={invite.id} className="px-4 py-3">
+                  <div className="flex items-start gap-3">
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-muted">
+                      <Users aria-hidden="true" className="h-4 w-4" />
                     </span>
-                  </p>
-                  <div className="mt-2 flex gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm leading-5 text-foreground">
+                        <span className="font-medium">
+                          {invite.sender?.display_name ?? "Someone"}
+                        </span>{" "}
+                        invited you to join{" "}
+                        <span className="font-medium">
+                          {invite.boards?.name ?? "a board"}
+                        </span>
+                      </p>
+                      <p className="mt-1 flex items-center gap-1.5 text-xs text-muted">
+                        <Clock3 aria-hidden="true" className="h-3 w-3" />
+                        <time dateTime={invite.created_at} suppressHydrationWarning>
+                          {new Intl.DateTimeFormat(undefined, {
+                            month: "short",
+                            day: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                          }).format(new Date(invite.created_at))}
+                        </time>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex justify-end gap-2">
                     <button
                       type="button"
                       onClick={() => respond(invite.id, "accepted")}
                       disabled={busyId === invite.id}
-                      className="rounded-lg bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-60"
+                      className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                     >
+                      <Check aria-hidden="true" className="h-4 w-4" />
                       Accept
                     </button>
                     <button
                       type="button"
                       onClick={() => respond(invite.id, "rejected")}
                       disabled={busyId === invite.id}
-                      className="rounded-lg border border-border px-3 py-1 text-xs text-foreground hover:bg-surface-hover disabled:opacity-60"
+                      className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-border px-3 text-sm text-foreground hover:bg-surface-hover disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                     >
+                      <X aria-hidden="true" className="h-4 w-4" />
                       Decline
                     </button>
                   </div>
@@ -152,11 +216,11 @@ export default function InvitesBell({
           )}
 
           {error && (
-            <p role="alert" className="mt-2 text-xs text-danger">
+            <p role="alert" className="border-t border-border px-4 py-3 text-sm text-danger">
               {error}
             </p>
           )}
-        </div>
+        </section>
       )}
     </div>
   );
