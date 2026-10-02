@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell, LockKeyhole, Palette, ShieldCheck, UserRound } from "lucide-react";
+import {
+  Bell,
+  Database,
+  LockKeyhole,
+  Palette,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
 
 const sections = [
   { id: "account", label: "Account", icon: UserRound },
@@ -9,6 +16,7 @@ const sections = [
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "privacy", label: "Privacy", icon: ShieldCheck },
   { id: "security", label: "Security", icon: LockKeyhole },
+  { id: "data", label: "Your data", icon: Database },
 ] as const;
 
 export default function SettingsNavigation() {

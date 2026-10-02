@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { CheckCircle2, Mail, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Download, Mail, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_USER_SETTINGS, type UserSettings } from "@/lib/settings";
 import ProfileForm from "@/components/settings/ProfileForm";
@@ -8,6 +8,7 @@ import ChangeEmailForm from "@/components/settings/ChangeEmailForm";
 import AppearanceForm from "@/components/settings/AppearanceForm";
 import NotificationsForm from "@/components/settings/NotificationsForm";
 import PrivacyForm from "@/components/settings/PrivacyForm";
+import DeleteAccountForm from "@/components/settings/DeleteAccountForm";
 import SignOutAllButton from "@/components/settings/SignOutAllButton";
 import SettingsNavigation from "@/components/settings/SettingsNavigation";
 import SignOutButton from "@/components/SignOutButton";
@@ -222,6 +223,40 @@ export default async function SettingsPage() {
               </div>
               <SignOutAllButton />
             </div>
+          </section>
+
+          <section
+            id="data"
+            aria-labelledby="data-title"
+            className="scroll-mt-24 space-y-4 border-t border-border pt-8"
+          >
+            <div>
+              <h2 id="data-title" className="text-lg font-semibold text-foreground">
+                Your data
+              </h2>
+              <p className="mt-1 text-sm text-muted">
+                Download a copy of your data or permanently delete your account.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 border-y border-border py-4">
+              <div>
+                <p className="text-sm font-medium text-foreground">Export your data</p>
+                <p className="mt-0.5 text-xs text-muted">
+                  Download your profile, settings, messages and activity as a JSON file.
+                </p>
+              </div>
+              <a
+                href="/api/account/export"
+                download
+                className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-border bg-surface px-4 text-sm font-medium text-foreground hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                <Download aria-hidden="true" className="h-4 w-4" />
+                Download JSON
+              </a>
+            </div>
+
+            <DeleteAccountForm requirePassword={hasPasswordLogin} />
           </section>
         </div>
       </div>

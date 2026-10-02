@@ -253,6 +253,10 @@ export type Database = {
       };
     };
     Functions: {
+      delete_user_data: {
+        Args: { p_user_id: string };
+        Returns: string[];
+      };
       reorder_columns: {
         Args: { items: Json };
         Returns: undefined;
