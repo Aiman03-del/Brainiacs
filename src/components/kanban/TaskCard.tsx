@@ -2,6 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { CalendarDays } from "lucide-react";
 import type { Task } from "@/types";
 
 interface TaskCardBodyProps {
@@ -35,7 +36,8 @@ export function TaskCardBody({
       )}
 
       {task.due_at && (
-        <p className="mt-2 text-xs text-muted" suppressHydrationWarning>
+        <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted" suppressHydrationWarning>
+          <CalendarDays aria-hidden="true" className="h-3.5 w-3.5" />
           Due{" "}
           {new Date(task.due_at).toLocaleDateString(undefined, {
             month: "short",

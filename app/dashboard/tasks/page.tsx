@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import TaskWorkspace from "@/components/kanban/TaskWorkspace";
+import type { TaskOverviewRecord } from "@/components/kanban/TaskWorkspace";
 
 export default async function TasksPage() {
   const supabase = await createClient();
@@ -10,52 +12,62 @@ export default async function TasksPage() {
 
   if (!user) redirect("/login");
 
-  const { data: memberships } = await supabase
+  const { data: memberships, error: membershipError } = await supabase
     .from("board_members")
-    .select("boards(id, name, theme)")
+    .select("boards(id, name)")
     .eq("user_id", user.id);
+
+  if (membershipError) return <TaskLoadError />;
 
   const boards = (memberships ?? [])
     .map((membership) => membership.boards)
     .filter(Boolean)
     .sort((left, right) => left.name.localeCompare(right.name));
+  const boardIds = boards.map((board) => board.id);
+  const boardNames = new Map(boards.map((board) => [board.id, board.name]));
 
+  if (!boardIds.length) return <TaskWorkspace tasks={[]} boards={[]} />;
+
+  const [tasksResult, completedResult] = await Promise.all([
+    supabase
+      .from("tasks")
+      .select("id, board_id, title, description, due_at, created_at, columns(title)")
+      .in("board_id", boardIds)
+      .order("due_at", { ascending: true, nullsFirst: false }),
+    supabase
+      .from("completed_tasks")
+      .select("task_id")
+      .eq("user_id", user.id),
+  ]);
+
+  if (tasksResult.error || completedResult.error) return <TaskLoadError />;
+
+  const completedTaskIds = new Set(
+    (completedResult.data ?? []).map((task) => task.task_id),
+  );
+  const tasks: TaskOverviewRecord[] = (tasksResult.data ?? []).map((task) => ({
+    id: task.id,
+    boardId: task.board_id,
+    boardName: boardNames.get(task.board_id) ?? "Board",
+    title: task.title,
+    description: task.description,
+    status: task.columns?.title ?? "No column",
+    dueAt: task.due_at,
+    createdAt: task.created_at,
+    completedByCurrentUser: completedTaskIds.has(task.id),
+  }));
+
+  return <TaskWorkspace tasks={tasks} boards={boards} />;
+}
+
+function TaskLoadError() {
   return (
-    <div className="mx-auto max-w-4xl">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Tasks</h1>
-        <p className="mt-1 text-sm text-muted">
-          Open a board to manage its Kanban tasks and workflow.
-        </p>
-      </header>
-      {boards.length ? (
-        <ul className="divide-y rounded-xl border bg-surface">
-          {boards.map((board) => (
-            <li key={board.id} className="flex items-center gap-4 px-4 py-4">
-              <span
-                className="h-3 w-3 shrink-0 rounded-full"
-                style={{ backgroundColor: board.theme }}
-              />
-              <span className="min-w-0 flex-1 truncate font-medium text-foreground">
-                {board.name}
-              </span>
-              <Link
-                href={`/dashboard/boards/${board.id}`}
-                className="rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-surface-hover"
-              >
-                Open tasks
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className="rounded-xl border border-dashed p-8 text-center">
-          <p className="text-sm text-muted">Create or join a channel to manage tasks.</p>
-          <Link href="/dashboard/boards" className="mt-4 inline-block text-sm font-medium text-primary">
-            Browse channels
-          </Link>
-        </div>
-      )}
-    </div>
+    <section role="alert" className="mx-auto max-w-xl rounded-xl border border-border bg-surface p-8 text-center">
+      <h1 className="text-lg font-semibold text-foreground">Unable to load tasks.</h1>
+      <p className="mt-1 text-sm text-muted">Please try again.</p>
+      <Link href="/dashboard/tasks" className="mt-4 inline-flex min-h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover">
+        Try again
+      </Link>
+    </section>
   );
 }

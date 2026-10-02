@@ -11,7 +11,7 @@ export default async function AiPage() {
   if (!user) redirect("/login");
 
   return (
-    <div className="mx-auto h-[calc(100vh-8.5rem)] max-w-3xl overflow-hidden rounded-2xl border bg-surface">
+    <div className="mx-auto h-[calc(100dvh-8.5rem)] min-h-[28rem] max-w-5xl">
       <AiChat />
     </div>
   );

@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import type { FormEvent } from "react";
 import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, Plus, Trash2, X } from "lucide-react";
 import TaskCard from "./TaskCard";
-import type { FormEvent } from "react";
 import type { Column as BoardColumn, Task } from "@/types";
 
 interface ColumnProps {
@@ -60,7 +61,7 @@ export default function Column({
     const cleanTitle = title.trim();
     setEditing(false);
     if (cleanTitle && cleanTitle !== column.title) {
-      onRename(column.id, cleanTitle);
+      void onRename(column.id, cleanTitle);
     }
   };
 
@@ -80,52 +81,58 @@ export default function Column({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex w-72 shrink-0 flex-col rounded-2xl border bg-surface-muted p-3"
+      className="flex w-72 shrink-0 flex-col rounded-xl border border-border bg-surface-muted p-3"
     >
       <div className="mb-3 flex items-center gap-2">
         <button
           type="button"
-          aria-label="Drag column"
+          aria-label={`Drag ${column.title} column`}
+          title="Drag column"
           {...attributes}
           {...listeners}
-          className="cursor-grab px-1 text-muted hover:text-foreground"
+          className="cursor-grab rounded p-1 text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
         >
-          &#8942;&#8942;
+          <GripVertical aria-hidden="true" className="h-4 w-4" />
         </button>
 
         {editing ? (
           <input
             autoFocus
+            aria-label={`Rename ${column.title} column`}
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             onBlur={saveTitle}
             onKeyDown={(event) => {
               if (event.key === "Enter") event.currentTarget.blur();
-              if (event.key === "Escape") setEditing(false);
+              if (event.key === "Escape") {
+                setTitle(column.title);
+                setEditing(false);
+              }
             }}
             className="min-w-0 flex-1 rounded-md border border-border bg-surface px-2 py-1 text-sm font-semibold text-foreground"
           />
         ) : (
-          <h3
+          <button
+            type="button"
             onClick={startEdit}
-            className="min-w-0 flex-1 cursor-text truncate text-sm font-semibold text-foreground"
-            title="Click to rename"
+            title="Rename column"
+            className="min-w-0 flex-1 truncate rounded px-1 py-1 text-left text-sm font-semibold text-foreground hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-primary"
           >
             {column.title}
-          </h3>
+          </button>
         )}
 
-        <span className="rounded-full bg-surface px-2 py-0.5 text-xs text-muted">
+        <span className="rounded-full bg-surface px-2 py-0.5 text-xs tabular-nums text-muted">
           {tasks.length}
         </span>
-
         <button
           type="button"
-          aria-label="Delete column"
+          aria-label={`Delete ${column.title} column`}
+          title="Delete column"
           onClick={() => onDelete(column.id)}
-          className="rounded-md px-1.5 text-muted hover:bg-danger-soft hover:text-danger"
+          className="rounded-md p-1 text-muted hover:bg-danger-soft hover:text-danger focus-visible:outline-2 focus-visible:outline-danger"
         >
-          &times;
+          <Trash2 aria-hidden="true" className="h-4 w-4" />
         </button>
       </div>
 
@@ -142,7 +149,9 @@ export default function Column({
 
       {adding ? (
         <form onSubmit={handleAddTask} className="mt-3 space-y-2">
+          <label htmlFor={`new-task-${column.id}`} className="sr-only">New task title</label>
           <input
+            id={`new-task-${column.id}`}
             autoFocus
             value={taskTitle}
             onChange={(event) => setTaskTitle(event.target.value)}
@@ -150,11 +159,8 @@ export default function Column({
             className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted"
           />
           <div className="flex gap-2">
-            <button
-              type="submit"
-              className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
-            >
-              Add
+            <button type="submit" disabled={!taskTitle.trim()} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50">
+              <Plus aria-hidden="true" className="h-4 w-4" />Add task
             </button>
             <button
               type="button"
@@ -162,9 +168,9 @@ export default function Column({
                 setAdding(false);
                 setTaskTitle("");
               }}
-              className="rounded-lg border border-border px-3 py-1.5 text-sm text-foreground hover:bg-surface-hover"
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm text-foreground hover:bg-surface-hover"
             >
-              Cancel
+              <X aria-hidden="true" className="h-4 w-4" />Cancel
             </button>
           </div>
         </form>
@@ -172,9 +178,9 @@ export default function Column({
         <button
           type="button"
           onClick={() => setAdding(true)}
-          className="mt-3 rounded-lg px-2 py-1.5 text-left text-sm text-muted hover:bg-surface-hover hover:text-foreground"
+          className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
         >
-          + Add task
+          <Plus aria-hidden="true" className="h-4 w-4" />Add task
         </button>
       )}
     </div>
