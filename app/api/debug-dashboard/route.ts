@@ -7,15 +7,23 @@ import { createClient } from "@/lib/supabase/server";
 
 type QueryResult = PromiseLike<{ error: PostgrestError | null }>;
 
+function diagnosticError(error: PostgrestError) {
+  console.error("Dashboard diagnostic query failed:", {
+    code: error.code,
+    message: error.message,
+  });
+  return {
+    code: error.code,
+    message: "Query failed.",
+    details: null,
+    hint: null,
+  };
+}
+
 async function check(query: QueryResult) {
   const { error } = await query;
   if (!error) return "OK";
-  return {
-    code: error.code,
-    message: error.message,
-    details: error.details,
-    hint: error.hint,
-  };
+  return diagnosticError(error);
 }
 
 export async function GET() {
@@ -51,12 +59,7 @@ export async function GET() {
         .maybeSingle(),
     ),
     board_members_with_boards: memberships.error
-      ? {
-          code: memberships.error.code,
-          message: memberships.error.message,
-          details: memberships.error.details,
-          hint: memberships.error.hint,
-        }
+      ? diagnosticError(memberships.error)
       : "OK",
   };
 

@@ -10,7 +10,7 @@ import type { Profile } from "@/types";
 
 const MAX_BYTES = 2 * 1024 * 1024;
 type ImageMime = "image/jpeg" | "image/png" | "image/webp";
-type ImageFile = File & { type: ImageMime };
+type ImageFile = { file: File; mime: ImageMime };
 const TYPES: Record<ImageMime, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
@@ -74,7 +74,7 @@ export default function ProfileForm({ userId, profile }: ProfileFormProps) {
       return;
     }
 
-    setFile(picked as ImageFile);
+    setFile({ file: picked, mime: picked.type });
     setPreview(URL.createObjectURL(picked));
     setRemovePhoto(false);
   };
@@ -104,10 +104,10 @@ export default function ProfileForm({ userId, profile }: ProfileFormProps) {
 
     try {
       if (file) {
-        const path = `${userId}/avatar-${Date.now()}.${TYPES[file.type]}`;
+        const path = `${userId}/avatar-${Date.now()}.${TYPES[file.mime]}`;
         const { error: uploadError } = await supabase.storage
           .from("avatars")
-          .upload(path, file, { contentType: file.type });
+          .upload(path, file.file, { contentType: file.mime });
 
         if (uploadError) {
           setError("Unable to upload this photo. Please try another image.");

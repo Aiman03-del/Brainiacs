@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowDown, ChevronRight, Hash, LoaderCircle, Lock, MessageSquare, Pin, Search, Users } from "lucide-react";
 import { useConfirm } from "@/components/ui/confirm";
 import { createClient } from "@/lib/supabase/client";
+import { parseReactions, toMessage, toPoll } from "@/lib/messenger-data";
 import MessageItem from "./MessageItem";
 import MessageInput from "./MessageInput";
 import PollsPanel from "./PollsPanel";
@@ -13,14 +14,12 @@ import type {
   BoardSummary,
   Message,
   MessageAttachment,
-  MessageReactions,
-  MessageRow as MessageDatabaseRow,
+  MessageRow,
   Poll,
   PollOptions,
-  PollRow as PollDatabaseRow,
+  PollRow,
   PollVote,
 } from "@/types";
-import type { Json } from "@/types/database.types";
 
 const BUCKET = "chat-attachments";
 
@@ -35,25 +34,6 @@ interface ChatWindowProps {
   initialPolls: Poll[];
   pageSize: number;
   initialLoadError?: boolean;
-}
-
-function toMessage(row: MessageDatabaseRow): Message {
-  return {
-    ...row,
-    attachments: row.attachments as unknown as MessageAttachment[],
-    reactions: row.reactions as MessageReactions,
-  };
-}
-
-function toPoll(
-  row: PollDatabaseRow,
-  pollVotes: Poll["poll_votes"] = [],
-): Poll {
-  return {
-    ...row,
-    options: row.options as PollOptions,
-    poll_votes: pollVotes,
-  };
 }
 
 export default function ChatWindow({
@@ -91,7 +71,7 @@ export default function ChatWindow({
 
     const channel = supabase
       .channel(`chat-${board.id}`)
-      .on(
+      .on<MessageRow>(
         "postgres_changes",
         {
           event: "INSERT",
@@ -100,7 +80,7 @@ export default function ChatWindow({
           filter: boardFilter,
         },
         (payload) => {
-          const message = toMessage(payload.new as unknown as MessageDatabaseRow);
+          const message = toMessage(payload.new);
           if (!stickRef.current) setHasNewMessages(true);
           setMessages((previous) =>
             previous.some((entry) => entry.id === message.id)
@@ -109,7 +89,7 @@ export default function ChatWindow({
           );
         },
       )
-      .on(
+      .on<MessageRow>(
         "postgres_changes",
         {
           event: "UPDATE",
@@ -118,9 +98,7 @@ export default function ChatWindow({
           filter: boardFilter,
         },
         (payload) => {
-          const incoming = toMessage(
-            payload.new as unknown as MessageDatabaseRow,
-          );
+          const incoming = toMessage(payload.new);
           setMessages((previous) =>
             previous.map((message) =>
               message.id === incoming.id
@@ -130,7 +108,7 @@ export default function ChatWindow({
           );
         },
       )
-      .on(
+      .on<PollRow>(
         "postgres_changes",
         {
           event: "INSERT",
@@ -139,7 +117,7 @@ export default function ChatWindow({
           filter: boardFilter,
         },
         (payload) => {
-          const poll = toPoll(payload.new as unknown as PollDatabaseRow);
+          const poll = toPoll(payload.new);
           setPolls((previous) =>
             previous.some((entry) => entry.id === poll.id)
               ? previous
@@ -147,7 +125,7 @@ export default function ChatWindow({
           );
         },
       )
-      .on(
+      .on<PollRow>(
         "postgres_changes",
         { event: "DELETE", schema: "public", table: "polls" },
         (payload) => {
@@ -156,15 +134,12 @@ export default function ChatWindow({
           );
         },
       )
-      .on(
+      .on<Pick<PollVote, "poll_id" | "user_id" | "option_index">>(
         "postgres_changes",
         { event: "*", schema: "public", table: "poll_votes" },
         (payload) => {
           if (payload.eventType === "DELETE") return;
-          const vote = payload.new as unknown as Pick<
-            PollVote,
-            "poll_id" | "user_id" | "option_index"
-          >;
+          const vote = payload.new;
           setPolls((previous) =>
             previous.map((poll) => {
               if (poll.id !== vote.poll_id) return poll;
@@ -228,9 +203,11 @@ export default function ChatWindow({
     const refreshedMessages = (messagesResult.data ?? [])
       .slice()
       .reverse()
-      .map((row) => toMessage(row as MessageDatabaseRow));
+      .map(toMessage);
     setMessages(refreshedMessages);
-    setPolls((pollsResult.data ?? []).map((row) => toPoll(row as PollDatabaseRow, row.poll_votes ?? [])));
+    setPolls(
+      (pollsResult.data ?? []).map((row) => toPoll(row, row.poll_votes ?? [])),
+    );
     setHasMore((messagesResult.data ?? []).length >= pageSize);
     setLoadFailed(false);
     setError("");
@@ -269,7 +246,7 @@ export default function ChatWindow({
       setResults({
         query: cleanQuery,
         rows: (data ?? []).map((row) =>
-          toMessage(row as MessageDatabaseRow),
+          toMessage(row),
         ),
       });
     }, 350);
@@ -301,7 +278,7 @@ export default function ChatWindow({
 
     stickRef.current = false;
     const older = (data ?? [])
-      .map((row) => toMessage(row as MessageDatabaseRow))
+      .map(toMessage)
       .reverse();
     setMessages((previous) => {
       const ids = new Set(previous.map((message) => message.id));
@@ -340,7 +317,12 @@ export default function ChatWindow({
         board_id: board.id,
         sender_id: userId,
         text: text || null,
-        attachments: attachments as unknown as Json,
+        attachments: attachments.map(({ path, name, type, size }) => ({
+          path,
+          name,
+          type,
+          size,
+        })),
       })
       .select()
       .single();
@@ -433,7 +415,7 @@ export default function ChatWindow({
     setMessages((previous) =>
       previous.map((message) =>
         message.id === id
-          ? { ...message, reactions: data as MessageReactions }
+          ? { ...message, reactions: parseReactions(data) }
           : message,
       ),
     );

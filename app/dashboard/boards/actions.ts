@@ -12,6 +12,15 @@ type BoardValues = {
 
 export type ActionResult = { error: string } | { success: true; id?: string };
 
+function reportBoardError(
+  operation: string,
+  error: { code: string; message: string },
+  message: string,
+): ActionResult {
+  console.error(`Board ${operation} failed (${error.code}):`, error.message);
+  return { error: message };
+}
+
 function parseBoardForm(formData: FormData): BoardValues {
   const name = String(formData.get("name") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
@@ -40,7 +49,13 @@ export async function createBoard(formData: FormData): Promise<ActionResult> {
     .select("id")
     .single();
 
-  if (error) return { error: error.message };
+  if (error) {
+    return reportBoardError(
+      "creation",
+      error,
+      "Unable to create this board. Please try again.",
+    );
+  }
 
   await supabase.from("activities").insert({
     board_id: data.id,
@@ -75,7 +90,13 @@ export async function updateBoard(
     .eq("id", id)
     .select("id");
 
-  if (error) return { error: error.message };
+  if (error) {
+    return reportBoardError(
+      "update",
+      error,
+      "Unable to update this board. Please try again.",
+    );
+  }
   if (!data || data.length === 0) {
     return { error: "Only the board owner can edit this board." };
   }
@@ -106,7 +127,13 @@ export async function deleteBoard(id: string): Promise<ActionResult> {
     .eq("id", id)
     .select("id");
 
-  if (error) return { error: error.message };
+  if (error) {
+    return reportBoardError(
+      "deletion",
+      error,
+      "Unable to delete this board. Please try again.",
+    );
+  }
   if (!data || data.length === 0) {
     return { error: "Only the board owner can delete this board." };
   }

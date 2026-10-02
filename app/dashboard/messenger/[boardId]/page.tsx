@@ -1,13 +1,8 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ChatWindow from "@/components/messenger/ChatWindow";
-import type {
-  Message,
-  MessageAttachment,
-  MessageReactions,
-  Poll,
-  PollOptions,
-} from "@/types";
+import { toMessage, toPoll } from "@/lib/messenger-data";
+import type { Message, Poll } from "@/types";
 
 const PAGE_SIZE = 50;
 
@@ -70,16 +65,10 @@ export default async function BoardChatPage({
   const initialMessages: Message[] = (messagesResult.data ?? [])
     .slice()
     .reverse()
-    .map((message) => ({
-      ...message,
-      attachments: message.attachments as unknown as MessageAttachment[],
-      reactions: message.reactions as unknown as MessageReactions,
-    }));
-  const initialPolls: Poll[] = (pollsResult.data ?? []).map((poll) => ({
-    ...poll,
-    options: poll.options as unknown as PollOptions,
-    poll_votes: poll.poll_votes ?? [],
-  }));
+    .map(toMessage);
+  const initialPolls: Poll[] = (pollsResult.data ?? []).map((poll) =>
+    toPoll(poll, poll.poll_votes ?? []),
+  );
 
   return (
     <ChatWindow

@@ -82,7 +82,7 @@ export default function KanbanBoard({
 
     const channel = supabase
       .channel(`board-${boardId}`)
-      .on(
+      .on<BoardColumn>(
         "postgres_changes",
         {
           event: "INSERT",
@@ -91,7 +91,7 @@ export default function KanbanBoard({
           filter: `board_id=eq.${boardId}`,
         },
         (payload) => {
-          const incoming = payload.new as unknown as BoardColumn;
+          const incoming = payload.new;
           setColumns((previous) =>
             previous.some((column) => column.id === incoming.id)
               ? previous
@@ -99,7 +99,7 @@ export default function KanbanBoard({
           );
         },
       )
-      .on(
+      .on<BoardColumn>(
         "postgres_changes",
         {
           event: "UPDATE",
@@ -108,7 +108,7 @@ export default function KanbanBoard({
           filter: `board_id=eq.${boardId}`,
         },
         (payload) => {
-          const incoming = payload.new as unknown as BoardColumn;
+          const incoming = payload.new;
           setColumns((previous) =>
             sortIfIdle(
               previous.map((column) =>
@@ -120,7 +120,7 @@ export default function KanbanBoard({
           );
         },
       )
-      .on(
+      .on<BoardColumn>(
         "postgres_changes",
         { event: "DELETE", schema: "public", table: "columns" },
         (payload) => {
@@ -133,7 +133,7 @@ export default function KanbanBoard({
           );
         },
       )
-      .on(
+      .on<Task>(
         "postgres_changes",
         {
           event: "INSERT",
@@ -142,7 +142,7 @@ export default function KanbanBoard({
           filter: `board_id=eq.${boardId}`,
         },
         (payload) => {
-          const incoming = payload.new as unknown as Task;
+          const incoming = payload.new;
           setTasks((previous) =>
             previous.some((task) => task.id === incoming.id)
               ? previous
@@ -150,7 +150,7 @@ export default function KanbanBoard({
           );
         },
       )
-      .on(
+      .on<Task>(
         "postgres_changes",
         {
           event: "UPDATE",
@@ -159,7 +159,7 @@ export default function KanbanBoard({
           filter: `board_id=eq.${boardId}`,
         },
         (payload) => {
-          const incoming = payload.new as unknown as Task;
+          const incoming = payload.new;
           setTasks((previous) =>
             sortIfIdle(
               previous.map((task) =>
@@ -169,7 +169,7 @@ export default function KanbanBoard({
           );
         },
       )
-      .on(
+      .on<Task>(
         "postgres_changes",
         { event: "DELETE", schema: "public", table: "tasks" },
         (payload) => {

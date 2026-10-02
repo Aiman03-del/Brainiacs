@@ -72,17 +72,21 @@ export async function GET(): Promise<Response> {
       .limit(ROW_LIMIT),
   ]);
 
-  const failed = [
-    profile,
-    memberships,
-    messages,
-    completedTasks,
-    activities,
-    polls,
-    pollVotes,
-  ].some((result) => result.error);
+  const failedQueries = Object.entries({
+    profile: profile.error,
+    settings: settings.error,
+    memberships: memberships.error,
+    messages: messages.error,
+    completedTasks: completedTasks.error,
+    activities: activities.error,
+    polls: polls.error,
+    pollVotes: pollVotes.error,
+  }).flatMap(([query, error]) =>
+    error ? [{ query, code: error.code }] : [],
+  );
 
-  if (failed) {
+  if (failedQueries.length > 0) {
+    console.error("Account export query failures:", failedQueries);
     return NextResponse.json(
       { error: "Unable to prepare your export. Please try again." },
       { status: 500 },

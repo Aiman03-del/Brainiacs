@@ -111,9 +111,8 @@ export async function POST(request: Request): Promise<Response> {
 
   const groq = new Groq({ apiKey });
 
-  let completion;
-  try {
-    completion = await groq.chat.completions.create(
+  const createCompletion = () =>
+    groq.chat.completions.create(
       {
         model: MODEL,
         messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
@@ -126,6 +125,10 @@ export async function POST(request: Request): Promise<Response> {
       },
       { signal: request.signal },
     );
+
+  let completion: Awaited<ReturnType<typeof createCompletion>>;
+  try {
+    completion = await createCompletion();
   } catch (error: unknown) {
     const details = isRecord(error) ? error : {};
     const status = typeof details.status === "number" ? details.status : 0;
