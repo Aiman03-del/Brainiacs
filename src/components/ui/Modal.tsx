@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { spring } from "@/lib/motion";
@@ -45,6 +45,7 @@ export function Modal({
   const descriptionId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -68,6 +69,7 @@ export function Modal({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        if (event.defaultPrevented) return;
         event.stopPropagation();
         onCloseRef.current();
         return;
@@ -115,10 +117,10 @@ export function Modal({
         <motion.div
           key="modal-root"
           className="fixed inset-0 z-100 flex items-end justify-center p-4 sm:items-center"
-          initial={{ opacity: 0 }}
+          initial={reduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          exit={reduceMotion ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0 }}
+          transition={reduceMotion ? { duration: 0 } : { duration: 0.2 }}
         >
           <div
             className="absolute inset-0 bg-overlay backdrop-blur-sm"
@@ -133,17 +135,17 @@ export function Modal({
             aria-labelledby={titleId}
             aria-describedby={description ? descriptionId : undefined}
             tabIndex={-1}
-            initial={{ opacity: 0, y: 24, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.98 }}
-            transition={spring.snappy}
+            initial={reduceMotion ? false : { opacity: 0, y: 24, scale: 0.97 }}
+            animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+            exit={reduceMotion ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0, y: 12, scale: 0.98 }}
+            transition={reduceMotion ? { duration: 0 } : spring.snappy}
             className={cn(
-              "relative flex max-h-[90vh] w-full flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-xl outline-none",
+              "relative flex max-h-[90dvh] w-full flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-xl outline-none",
               sizes[size],
               className,
             )}
           >
-            <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-4">
+            <div className="flex items-start justify-between gap-4 border-b border-border px-4 py-3 sm:px-6 sm:py-4">
               <div className="min-w-0">
                 <h2 id={titleId} className="text-lg font-semibold text-foreground">
                   {title}
@@ -158,18 +160,20 @@ export function Modal({
                 type="button"
                 onClick={onClose}
                 aria-label="Close dialog"
-                className="-mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:h-9 sm:w-9"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
 
             {children && (
-              <div className="flex-1 overflow-y-auto px-6 py-4">{children}</div>
+              <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
+                {children}
+              </div>
             )}
 
             {footer && (
-              <div className="flex justify-end gap-2 border-t border-border px-6 py-4">
+              <div className="flex justify-end gap-2 border-t border-border px-4 py-3 sm:px-6 sm:py-4">
                 {footer}
               </div>
             )}

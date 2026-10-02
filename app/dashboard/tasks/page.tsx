@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import TaskWorkspace from "@/components/kanban/TaskWorkspace";
 import type { TaskOverviewRecord } from "@/components/kanban/TaskWorkspace";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export default async function TasksPage() {
   const supabase = await createClient();
@@ -62,12 +62,9 @@ export default async function TasksPage() {
 
 function TaskLoadError() {
   return (
-    <section role="alert" className="mx-auto max-w-xl rounded-xl border border-border bg-surface p-8 text-center">
-      <h1 className="text-lg font-semibold text-foreground">Unable to load tasks.</h1>
-      <p className="mt-1 text-sm text-muted">Please try again.</p>
-      <Link href="/dashboard/tasks" className="mt-4 inline-flex min-h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover">
-        Try again
-      </Link>
-    </section>
+    <ErrorState
+      title="Tasks couldn't load."
+      description="Your tasks are temporarily unavailable. Try again in a moment."
+    />
   );
 }

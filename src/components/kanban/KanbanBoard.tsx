@@ -21,6 +21,7 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { createClient } from "@/lib/supabase/client";
+import { useConfirm } from "@/components/ui/confirm";
 import Column from "./Column";
 import { TaskCardBody } from "./TaskCard";
 import TaskModal from "./TaskModal";
@@ -50,6 +51,7 @@ export default function KanbanBoard({
   initialCompleted,
 }: KanbanBoardProps) {
   const [supabase] = useState(() => createClient());
+  const confirm = useConfirm();
   const [columns, setColumns] = useState<BoardColumn[]>(initialColumns);
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [completedIds, setCompletedIds] = useState<string[]>(initialCompleted ?? []);
@@ -236,7 +238,7 @@ export default function KanbanBoard({
       .single();
 
     if (insertError) {
-      setError(insertError.message);
+      setError("Unable to add this column. Please try again.");
       return;
     }
 
@@ -266,7 +268,7 @@ export default function KanbanBoard({
       .eq("id", columnId);
 
     if (updateError) {
-      setError(updateError.message);
+      setError("Unable to rename this column. Please try again.");
       setColumns((previous) =>
         previous.map((column) =>
           column.id === columnId ? { ...column, title: oldTitle } : column,
@@ -280,9 +282,13 @@ export default function KanbanBoard({
   const deleteColumn = async (columnId: string) => {
     const column = columns.find((entry) => entry.id === columnId);
     if (!column) return;
-    if (!window.confirm(`Delete column "${column.title}" and all its tasks?`)) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: "Delete column and tasks?",
+      description: `Delete "${column.title}" and all tasks in it? This cannot be undone.`,
+      confirmLabel: "Delete column",
+      destructive: true,
+    });
+    if (!confirmed) return;
     setError("");
 
     const { error: deleteError } = await supabase
@@ -291,7 +297,7 @@ export default function KanbanBoard({
       .eq("id", columnId);
 
     if (deleteError) {
-      setError(deleteError.message);
+      setError("Unable to delete this column. Please try again.");
       return;
     }
 
@@ -316,7 +322,7 @@ export default function KanbanBoard({
       .single();
 
     if (insertError) {
-      setError(insertError.message);
+      setError("Unable to create this task. Please try again.");
       return false;
     }
 
@@ -344,7 +350,7 @@ export default function KanbanBoard({
       .select()
       .single();
 
-    if (updateError) return updateError.message;
+    if (updateError) return "Unable to save task changes. Please try again.";
 
     setTasks((previous) =>
       previous.map((task) =>
@@ -363,7 +369,7 @@ export default function KanbanBoard({
       .delete()
       .eq("id", taskId);
 
-    if (deleteError) return deleteError.message;
+    if (deleteError) return "Unable to delete this task. Please try again.";
 
     setTasks((previous) => previous.filter((entry) => entry.id !== taskId));
     logActivity("Task", "Delete", `Task ${task?.title ?? ""} deleted`);
@@ -384,7 +390,7 @@ export default function KanbanBoard({
         );
         return null;
       }
-      return insertError.message;
+      return "Unable to mark this task complete. Please try again.";
     }
 
     setCompletedIds((previous) => [...previous, taskId]);
@@ -504,7 +510,7 @@ export default function KanbanBoard({
         })),
       });
       if (rpcError)
-        setError(`Failed to save column order: ${rpcError.message}`);
+        setError("Unable to save the column order. Please try again.");
       return;
     }
 
@@ -557,7 +563,7 @@ export default function KanbanBoard({
         items,
       });
       if (rpcError) {
-        setError(`Failed to save task order: ${rpcError.message}`);
+        setError("Unable to save the task order. Please try again.");
         return;
       }
 
@@ -590,7 +596,12 @@ export default function KanbanBoard({
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
-        <div className="flex items-start gap-4 overflow-x-auto pb-4">
+        <div
+          role="region"
+          aria-label="Kanban columns"
+          tabIndex={0}
+          className="flex items-start gap-4 overflow-x-auto overscroll-x-contain pb-4 focus-visible:outline-2 focus-visible:outline-primary"
+        >
           <SortableContext
             items={columns.map((column) => column.id)}
             strategy={horizontalListSortingStrategy}

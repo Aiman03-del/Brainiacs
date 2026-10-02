@@ -30,8 +30,8 @@ export default async function SettingsPage() {
         </p>
       </header>
 
-      <div className="grid gap-6 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-10">
-        <aside className="md:sticky md:top-24 md:h-fit">
+      <div className="grid gap-6 lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-10">
+        <aside className="lg:sticky lg:top-24 lg:h-fit">
           <SettingsNavigation />
         </aside>
 

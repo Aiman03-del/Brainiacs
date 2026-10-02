@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 import { Check, LoaderCircle, Trash2, X } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
 import type { Database } from "@/types/database.types";
 import type { Task } from "@/types";
 
@@ -106,6 +107,7 @@ export default function TaskModal({
   const handleDeleteDialogKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Escape") {
       event.preventDefault();
+      event.stopPropagation();
       if (!busy) setConfirmDelete(false);
       return;
     }
@@ -128,17 +130,18 @@ export default function TaskModal({
     "w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted focus-visible:outline-2 focus-visible:outline-primary";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4">
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="task-modal-title"
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-border bg-surface p-5 shadow-xl sm:p-6"
+    <>
+      <Modal
+        open
+        onClose={() => {
+          if (busy) return;
+          if (confirmDelete) setConfirmDelete(false);
+          else onClose();
+        }}
+        title="Edit task"
+        size="md"
+        className="sm:mb-0"
       >
-        <h2 id="task-modal-title" className="mb-4 text-xl font-bold text-foreground">
-          Edit task
-        </h2>
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="task-title" className="mb-1 block text-sm font-medium text-foreground">Title</label>
@@ -175,7 +178,7 @@ export default function TaskModal({
             {completed ? (
               <p className="text-sm font-medium text-success">You completed this task (+1 point).</p>
             ) : (
-              <button type="button" onClick={handleComplete} disabled={busy} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-success px-3 text-sm font-medium text-success hover:bg-surface-hover disabled:opacity-60">
+              <button type="button" onClick={handleComplete} disabled={busy} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-success px-3 text-sm font-medium text-success hover:bg-surface-hover disabled:opacity-60 sm:min-h-9">
                 {busy ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : <Check aria-hidden="true" className="h-4 w-4" />}
                 Mark as done (+1 point)
               </button>
@@ -185,19 +188,19 @@ export default function TaskModal({
           {error && <p role="alert" className="text-sm text-danger">{error}</p>}
 
           <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-            <button type="button" onClick={() => setConfirmDelete(true)} disabled={busy} className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-danger px-3 text-sm text-danger hover:bg-danger-soft disabled:opacity-60">
+            <button type="button" onClick={() => setConfirmDelete(true)} disabled={busy} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-danger px-3 text-sm text-danger hover:bg-danger-soft disabled:opacity-60 sm:min-h-10">
               <Trash2 aria-hidden="true" className="h-4 w-4" />Delete
             </button>
             <div className="ml-auto flex gap-2">
-              <button type="button" onClick={onClose} disabled={busy} className="min-h-10 rounded-lg border border-border px-4 text-sm text-foreground hover:bg-surface-hover disabled:opacity-60">Cancel</button>
-              <button type="submit" disabled={busy} className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-60">
+              <button type="button" onClick={onClose} disabled={busy} className="min-h-11 rounded-lg border border-border px-4 text-sm text-foreground hover:bg-surface-hover disabled:opacity-60 sm:min-h-10">Cancel</button>
+              <button type="submit" disabled={busy} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-60 sm:min-h-10">
                 {busy ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : <Check aria-hidden="true" className="h-4 w-4" />}
                 Save
               </button>
             </div>
           </div>
         </form>
-      </div>
+      </Modal>
 
       {confirmDelete && (
         <div
@@ -206,15 +209,15 @@ export default function TaskModal({
           aria-labelledby="delete-task-title"
           aria-describedby="delete-task-description"
           onKeyDown={handleDeleteDialogKeyDown}
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-overlay p-4"
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-overlay p-4"
         >
           <div className="w-full max-w-sm rounded-xl border border-border bg-surface p-5 shadow-xl">
             <h3 id="delete-task-title" className="text-base font-semibold text-foreground">Delete this task?</h3>
             <p id="delete-task-description" className="mt-2 text-sm text-muted">This task will be removed from its board.</p>
             {error && <p role="alert" className="mt-3 text-sm text-danger">{error}</p>}
             <div className="mt-5 flex justify-end gap-2">
-              <button type="button" autoFocus disabled={busy} onClick={() => setConfirmDelete(false)} className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-border px-3 text-sm text-foreground hover:bg-surface-hover disabled:opacity-60"><X aria-hidden="true" className="h-4 w-4" />Cancel</button>
-              <button type="button" disabled={busy} onClick={handleDelete} className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-danger px-3 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60">
+              <button type="button" autoFocus disabled={busy} onClick={() => setConfirmDelete(false)} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-border px-3 text-sm text-foreground hover:bg-surface-hover disabled:opacity-60 sm:min-h-10"><X aria-hidden="true" className="h-4 w-4" />Cancel</button>
+              <button type="button" disabled={busy} onClick={handleDelete} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-danger px-3 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60 sm:min-h-10">
                 {busy ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : <Trash2 aria-hidden="true" className="h-4 w-4" />}
                 {busy ? "Deleting..." : "Delete"}
               </button>
@@ -222,6 +225,6 @@ export default function TaskModal({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

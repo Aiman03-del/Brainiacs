@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowDown, ChevronRight, Hash, LoaderCircle, Lock, MessageSquare, Pin, Search, Users } from "lucide-react";
+import { useConfirm } from "@/components/ui/confirm";
 import { createClient } from "@/lib/supabase/client";
 import MessageItem from "./MessageItem";
 import MessageInput from "./MessageInput";
@@ -65,6 +66,7 @@ export default function ChatWindow({
   initialLoadError = false,
 }: ChatWindowProps) {
   const [supabase] = useState(() => createClient());
+  const confirm = useConfirm();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [polls, setPolls] = useState<Poll[]>(initialPolls);
   const [hasMore, setHasMore] = useState(initialMessages.length >= pageSize);
@@ -510,7 +512,13 @@ export default function ChatWindow({
   };
 
   const deletePoll = async (pollId: string): Promise<void> => {
-    if (!window.confirm("Delete this poll?")) return;
+    const confirmed = await confirm({
+      title: "Delete poll?",
+      description: "This poll and its responses will be removed. This cannot be undone.",
+      confirmLabel: "Delete poll",
+      destructive: true,
+    });
+    if (!confirmed) return;
     setError("");
 
     const { error: deleteError } = await supabase
@@ -519,7 +527,7 @@ export default function ChatWindow({
       .eq("id", pollId);
 
     if (deleteError) {
-      setError(deleteError.message);
+      setError("Unable to delete this poll. Please try again.");
       return;
     }
     setPolls((previous) => previous.filter((poll) => poll.id !== pollId));
@@ -536,12 +544,12 @@ export default function ChatWindow({
   };
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-w-0 flex-col">
       <div className="flex flex-wrap items-center gap-2 border-b px-3 py-3 sm:gap-3 sm:px-4">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <Link
             href="/dashboard/messenger"
-            className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-md px-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+            className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-md px-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary sm:min-h-9"
           >
             Channels
             <ChevronRight aria-hidden="true" className="h-3.5 w-3.5" />

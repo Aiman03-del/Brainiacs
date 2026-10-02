@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import KanbanBoard from "@/components/kanban/KanbanBoard";
@@ -61,8 +62,12 @@ export default async function BoardPage({
 
   return (
     <div className="w-full">
-      <Link href="/dashboard/boards" className="text-sm text-primary">
-        &larr; Back to boards
+      <Link
+        href="/dashboard/boards"
+        className="inline-flex min-h-11 items-center gap-1.5 text-sm text-primary hover:underline focus-visible:outline-2 focus-visible:outline-primary"
+      >
+        <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+        Back to boards
       </Link>
 
       <div

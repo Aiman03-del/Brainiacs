@@ -87,7 +87,7 @@ export default function MessageInput({ onSend, onOpenPoll, autoFocus = false }: 
           <button
             type="button"
             onClick={() => setFile(null)}
-            className="rounded p-1 text-muted hover:bg-surface-hover hover:text-danger focus-visible:outline-2 focus-visible:outline-primary"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded text-muted hover:bg-surface-hover hover:text-danger focus-visible:outline-2 focus-visible:outline-primary sm:h-9 sm:w-9"
             aria-label="Remove file"
             title="Remove file"
           >
@@ -115,7 +115,7 @@ export default function MessageInput({ onSend, onOpenPoll, autoFocus = false }: 
           onClick={() => fileRef.current?.click()}
           aria-label="Attach file"
           title="Attach file"
-          className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border border-border px-2.5 text-sm text-foreground hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-primary sm:px-3"
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border text-sm text-foreground hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-primary sm:h-10 sm:w-auto sm:gap-2 sm:px-3"
         >
           <Paperclip aria-hidden="true" className="h-4 w-4" />
           <span className="hidden sm:inline">Attach</span>
@@ -125,7 +125,7 @@ export default function MessageInput({ onSend, onOpenPoll, autoFocus = false }: 
           onClick={onOpenPoll}
           aria-label="Create poll"
           title="Create poll"
-          className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border border-border px-2.5 text-sm text-foreground hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-primary sm:px-3"
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border text-sm text-foreground hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-primary sm:h-10 sm:w-auto sm:gap-2 sm:px-3"
         >
           <BarChart3 aria-hidden="true" className="h-4 w-4" />
           <span className="hidden sm:inline">Poll</span>
@@ -140,7 +140,7 @@ export default function MessageInput({ onSend, onOpenPoll, autoFocus = false }: 
           maxLength={4000}
           aria-label="Write a message"
           placeholder="Write a message..."
-          className="max-h-32 min-h-10 min-w-0 flex-1 resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted focus-visible:outline-2 focus-visible:outline-primary"
+          className="max-h-32 min-h-11 min-w-0 flex-1 resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted focus-visible:outline-2 focus-visible:outline-primary sm:min-h-10"
         />
 
         <button
@@ -149,7 +149,7 @@ export default function MessageInput({ onSend, onOpenPoll, autoFocus = false }: 
           disabled={sending || (!text.trim() && !file)}
           aria-label={sending ? "Sending message" : "Send message"}
           title={sending ? "Sending message" : "Send message"}
-          className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:w-auto sm:px-4"
         >
           {sending ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : <Send aria-hidden="true" className="h-4 w-4" />}
           <span className="hidden sm:inline">{sending ? "Sending..." : "Send"}</span>

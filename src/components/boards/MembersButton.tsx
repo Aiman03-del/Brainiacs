@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useConfirm } from "@/components/ui/confirm";
 import { createClient } from "@/lib/supabase/client";
 import type { BoardMemberWithProfile, ProfileSearchResult } from "@/types";
 
@@ -27,6 +28,7 @@ export default function MembersButton({
   members,
 }: MembersButtonProps) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [supabase] = useState(() => createClient());
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -66,7 +68,7 @@ export default function MembersButton({
       setSearching(false);
 
       if (searchError) {
-        setError(searchError.message);
+        setError("Unable to search people. Please try again.");
         return;
       }
 
@@ -99,7 +101,7 @@ export default function MembersButton({
           previous.includes(profile.id) ? previous : [...previous, profile.id],
         );
       } else {
-        setError(insertError.message);
+        setError("Unable to send this invitation. Please try again.");
       }
       return;
     }
@@ -112,8 +114,16 @@ export default function MembersButton({
     targetId: string,
     isSelf: boolean,
   ): Promise<void> => {
-    const question = isSelf ? "Leave this board?" : "Remove this member?";
-    if (!window.confirm(question)) return;
+    const action = isSelf ? "Leave channel" : "Remove member";
+    const confirmed = await confirm({
+      title: isSelf ? "Leave this channel?" : "Remove this member?",
+      description: isSelf
+        ? "You will lose access to this channel and its conversation."
+        : "This person will lose access to this channel and its conversation.",
+      confirmLabel: action,
+      destructive: true,
+    });
+    if (!confirmed) return;
 
     setError("");
     setMessage("");
@@ -125,7 +135,7 @@ export default function MembersButton({
       .eq("user_id", targetId);
 
     if (deleteError) {
-      setError(deleteError.message);
+      setError("Unable to update channel membership. Please try again.");
       return;
     }
     if (!count) {

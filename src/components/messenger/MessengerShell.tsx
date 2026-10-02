@@ -17,7 +17,7 @@ export default function MessengerShell({ boards, children }: MessengerShellProps
     pathname.startsWith("/dashboard/messenger/");
 
   return (
-    <div className="flex h-[calc(100dvh-6rem)] min-h-0 overflow-hidden rounded-xl border border-border bg-surface md:h-[calc(100vh-7rem)]">
+    <div className="flex h-[calc(100dvh-6rem)] min-h-0 overflow-hidden rounded-xl border border-border bg-surface md:h-[calc(100dvh-7rem)]">
       <div className={`${channelSelected ? "hidden md:flex" : "flex"} min-h-0 w-full md:w-auto`}>
         <BoardList boards={boards} />
       </div>

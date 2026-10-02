@@ -99,7 +99,7 @@ export default function InvitesBell({
       );
 
       if (rpcError) {
-        setError(rpcError.message);
+        setError("Unable to respond to this invitation. Please try again.");
         return;
       }
 
@@ -136,7 +136,7 @@ export default function InvitesBell({
         <section
           id="board-invitations-panel"
           aria-label="Notifications"
-          className="fixed right-3 top-16 z-40 max-h-[min(32rem,calc(100dvh-5rem))] w-[min(22rem,calc(100vw-1.5rem))] overflow-y-auto rounded-xl border border-border bg-surface shadow-xl sm:absolute sm:right-0 sm:top-auto sm:mt-2"
+          className="fixed inset-x-3 top-16 z-40 max-h-[min(32rem,calc(100dvh-5rem))] w-auto max-w-[22rem] overflow-y-auto rounded-xl border border-border bg-surface shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-[22rem]"
         >
           <header className="flex items-center justify-between border-b border-border px-4 py-3">
             <div>

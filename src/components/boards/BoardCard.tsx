@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Hash, Lock, MessageSquare } from "lucide-react";
+import { Hash, Lock, MessageSquare, Pencil } from "lucide-react";
 import { useState, useTransition } from "react";
+import { Button } from "@/components/ui/Button";
+import { useConfirm } from "@/components/ui/confirm";
 import BoardFormModal from "./BoardFormModal";
 import {
   deleteBoard,
@@ -25,16 +27,23 @@ export default function BoardCard({
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
+  const confirm = useConfirm();
 
-  const handleDelete = () => {
-    if (!window.confirm(`Delete "${board.name}"? This cannot be undone.`)) {
-      return;
-    }
+  const handleDelete = async () => {
+    const confirmed = await confirm({
+      title: "Delete channel?",
+      description: `Delete "${board.name}"? This cannot be undone.`,
+      confirmLabel: "Delete channel",
+      destructive: true,
+    });
+    if (!confirmed) return;
     setError("");
     startTransition(async () => {
       try {
         const result = await deleteBoard(board.id);
-        if ("error" in result) setError(result.error);
+        if ("error" in result) {
+          setError("Unable to delete this channel. Please try again.");
+        }
       } catch {
         setError("Unable to delete this board. Please try again.");
       }
@@ -72,17 +81,16 @@ export default function BoardCard({
         </p>
       )}
 
-      <div className="mt-4 flex items-center gap-2">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         <Link
           href={`/dashboard/boards/${board.id}`}
-          className="rounded-lg bg-secondary px-3 py-1.5 text-sm text-secondary-foreground hover:bg-secondary-hover"
+          className="inline-flex min-h-9 items-center rounded-lg bg-secondary px-3 text-sm text-secondary-foreground transition-colors hover:bg-secondary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
-          Open
           Open board
         </Link>
         <Link
           href={`/dashboard/messenger/${board.id}`}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm text-foreground hover:bg-surface-hover"
+          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm text-foreground transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <MessageSquare aria-hidden="true" className="h-4 w-4" />
           Open channel
@@ -90,21 +98,22 @@ export default function BoardCard({
 
         {isOwner && (
           <>
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<Pencil aria-hidden="true" className="h-3.5 w-3.5" />}
               onClick={() => setEditing(true)}
-              className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-surface-hover"
             >
               Edit
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
               onClick={handleDelete}
-              disabled={pending}
-              className="rounded-lg border border-danger px-3 py-1.5 text-sm text-danger hover:bg-danger-soft disabled:opacity-60"
+              loading={pending}
             >
               {pending ? "Deleting..." : "Delete"}
-            </button>
+            </Button>
           </>
         )}
       </div>

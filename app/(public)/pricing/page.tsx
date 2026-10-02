@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Check } from "lucide-react";
 
 export const metadata = { title: "Pricing" };
 
@@ -14,7 +15,7 @@ const PLANS = [
       "Board chat and polls",
       "Leaderboard and activity log",
     ],
-    cta: "Get started",
+    cta: "Create account",
     highlight: false,
   },
   {
@@ -28,7 +29,7 @@ const PLANS = [
       "AI assistant",
       "Larger file uploads",
     ],
-    cta: "Start with Pro",
+    cta: "Create account",
     highlight: true,
   },
   {
@@ -42,7 +43,7 @@ const PLANS = [
       "Advanced permissions",
       "Extended activity history",
     ],
-    cta: "Contact us",
+    cta: "Create account",
     highlight: false,
   },
 ];
@@ -82,7 +83,7 @@ export default function PricingPage() {
             <ul className="mt-5 flex-1 space-y-2 text-sm text-foreground">
               {plan.features.map((feature) => (
                 <li key={feature} className="flex gap-2">
-                  <span className="text-success">&#10003;</span>
+                  <Check aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                   {feature}
                 </li>
               ))}
@@ -90,7 +91,7 @@ export default function PricingPage() {
 
             <Link
               href="/signup"
-              className={`mt-6 rounded-lg px-4 py-2 text-center text-sm font-medium ${
+              className={`mt-6 inline-flex min-h-11 items-center justify-center rounded-lg px-4 py-2 text-center text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.99] ${
                 plan.highlight
                   ? "bg-primary text-primary-foreground hover:bg-primary-hover"
                   : "border border-border text-foreground hover:bg-surface-hover"

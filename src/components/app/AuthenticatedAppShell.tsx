@@ -9,13 +9,13 @@ import {
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
-  Search,
   X,
 } from "lucide-react";
 import AccountMenu from "@/components/app/AccountMenu";
 import AppNavigation from "@/components/app/AppNavigation";
 import Avatar from "@/components/Avatar";
 import InvitesBell from "@/components/InvitesBell";
+import GlobalSearch from "@/components/search/GlobalSearch";
 import type { BoardInvite } from "@/types";
 import { findNavigationItem } from "@/lib/navigation";
 
@@ -41,27 +41,37 @@ export default function AuthenticatedAppShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileNavigationWasOpenRef = useRef(false);
   const activeItem = findNavigationItem(pathname);
 
   useEffect(() => {
-    if (mobileOpen) closeButtonRef.current?.focus();
+    if (mobileOpen) {
+      mobileNavigationWasOpenRef.current = true;
+      closeButtonRef.current?.focus();
+    } else if (mobileNavigationWasOpenRef.current) {
+      mobileNavigationWasOpenRef.current = false;
+      menuButtonRef.current?.focus();
+    }
   }, [mobileOpen]);
 
   useEffect(() => {
     if (!mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === "Escape") {
         setMobileOpen(false);
-        menuButtonRef.current?.focus();
       }
     };
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [mobileOpen]);
 
   const closeMobileNavigation = () => {
     setMobileOpen(false);
-    menuButtonRef.current?.focus();
   };
 
   const handleDrawerKeyDown = (event: KeyboardEvent<HTMLElement>) => {
@@ -126,7 +136,7 @@ export default function AuthenticatedAppShell({
         </div>
       </aside>
 
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1" inert={mobileOpen}>
         <header className="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 border-b border-border bg-surface px-3 sm:px-5">
           <div className="flex min-w-0 items-center gap-3">
             <button
@@ -136,13 +146,15 @@ export default function AuthenticatedAppShell({
               aria-label="Open navigation menu"
               aria-expanded={mobileOpen}
               aria-controls="mobile-app-navigation"
-              className="rounded-md p-2 text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary lg:hidden"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-md text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary lg:hidden"
             >
               <Menu aria-hidden="true" className="h-5 w-5" />
             </button>
-            <Link href="/dashboard" className="flex items-center gap-2 lg:hidden">
+            <Link href="/dashboard" aria-label="Brainiacs dashboard" className="flex min-w-0 items-center gap-2 lg:hidden">
               <BrainCircuit aria-hidden="true" className="h-5 w-5 text-primary" />
-              <span className="font-semibold text-foreground">Brainiacs</span>
+              <span className="max-w-36 truncate font-semibold text-foreground">
+                {activeItem?.label ?? "Workspace"}
+              </span>
             </Link>
             <p className="hidden truncate text-sm font-semibold text-foreground lg:block">
               {activeItem?.label ?? "Workspace"}
@@ -150,20 +162,13 @@ export default function AuthenticatedAppShell({
           </div>
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-3">
-            <Link
-              href="/dashboard/search"
-              aria-label="Search"
-              title="Search"
-              className="rounded-md p-2 text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
-            >
-              <Search aria-hidden="true" className="h-5 w-5" />
-            </Link>
+            <GlobalSearch />
             <InvitesBell userId={userId} initialInvites={initialInvites} />
             <Link
               href="/dashboard/profile"
               aria-label={`Open profile for ${name}`}
               title="Profile"
-              className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <Avatar name={name} src={photoUrl} size={32} />
             </Link>
@@ -198,7 +203,7 @@ export default function AuthenticatedAppShell({
                 type="button"
                 onClick={closeMobileNavigation}
                 aria-label="Close navigation menu"
-                className="rounded-md p-2 text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-md text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
               >
                 <X aria-hidden="true" className="h-5 w-5" />
               </button>

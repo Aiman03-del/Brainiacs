@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import BoardFormModal from "./BoardFormModal";
 import { createBoard } from "../../../app/dashboard/boards/actions";
 
@@ -22,14 +23,14 @@ export default function CreateBoardButton({
 
   return (
     <>
-      <button
-        type="button"
+      <Button
+        size="md"
+        leftIcon={<Plus aria-hidden="true" className="h-4 w-4" />}
+        className="px-3 py-2"
         onClick={() => setOpen(true)}
-        className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
-        <Plus aria-hidden="true" className="h-4 w-4" />
         {label}
-      </button>
+      </Button>
 
       {open && (
         <BoardFormModal

@@ -42,8 +42,9 @@ export function Button({
     <button
       {...props}
       disabled={disabled || loading}
+      aria-busy={loading || undefined}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60",
+        "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100",
         variants[variant],
         sizes[size],
         className,

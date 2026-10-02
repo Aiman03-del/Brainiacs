@@ -182,7 +182,6 @@ export default function TaskWorkspace({ tasks, boards }: TaskWorkspaceProps) {
         {tasks.length === 0 ? (
           <div className="flex flex-col items-center rounded-xl border border-dashed border-border bg-surface px-5 py-12 text-center">
             <CheckCircle2 aria-hidden="true" className="h-7 w-7 text-muted" />
-            <h3 className="mt-3 text-base font-semibold text-foreground">No tasks yet.</h3>
             <h3 className="mt-3 text-base font-semibold text-foreground">{boards.length ? "No tasks yet." : "No boards available."}</h3>
             <p className="mt-1 max-w-sm text-sm text-muted">{boards.length ? "Create a task in one of your boards to start tracking work." : "Create or join a board before adding tasks."}</p>
             {boards.length ? (

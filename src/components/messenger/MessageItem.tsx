@@ -258,7 +258,7 @@ export default function MessageItem({
     minute: "2-digit",
   });
   const actionButtonClass =
-    "inline-flex h-8 w-8 items-center justify-center rounded-md text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary";
+    "inline-flex h-11 w-11 items-center justify-center rounded-md text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary lg:h-8 lg:w-8";
 
   return (
     <>
@@ -350,7 +350,7 @@ export default function MessageItem({
                     onClick={() => onReact(message.id, emoji)}
                     aria-pressed={mine}
                     aria-label={`${emoji}, ${users.length} reactions${mine ? ", you reacted" : ""}`}
-                    className={`rounded-full border px-2 py-0.5 text-xs ${mine ? "border-primary bg-surface-muted text-foreground" : "bg-surface text-muted hover:bg-surface-hover"}`}
+                    className={`min-h-10 rounded-full border px-2 py-1 text-xs ${mine ? "border-primary bg-surface-muted text-foreground" : "bg-surface text-muted hover:bg-surface-hover"}`}
                   >
                     {emoji} {users.length}
                   </button>
@@ -361,7 +361,7 @@ export default function MessageItem({
         </div>
 
         {!editing && (
-          <div className="relative z-10 mt-1 flex w-full items-center justify-end gap-0.5 pl-12 md:absolute md:right-3 md:top-1 md:mt-0 md:w-auto md:pl-0 md:rounded-lg md:border md:border-border md:bg-surface md:p-0.5 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
+          <div className="relative z-10 mt-1 flex w-full flex-wrap items-center justify-end gap-0.5 pl-12 lg:absolute lg:right-3 lg:top-1 lg:mt-0 lg:w-auto lg:pl-0 lg:rounded-lg lg:border lg:border-border lg:bg-surface lg:p-0.5 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100">
             <div className="relative">
               <button
                 type="button"
@@ -374,7 +374,7 @@ export default function MessageItem({
                 <SmilePlus aria-hidden="true" className="h-4 w-4" />
               </button>
               {picker && (
-                <div className="absolute right-0 top-full z-20 mt-1 flex gap-1 rounded-lg border border-border bg-surface p-1 shadow-lg">
+                <div className="absolute left-0 top-full z-20 mt-1 grid w-[9.25rem] grid-cols-3 gap-1 rounded-lg border border-border bg-surface p-1 shadow-lg sm:left-auto sm:right-0 sm:flex sm:w-auto">
                   {REACTIONS.map((emoji) => (
                     <button
                       type="button"
@@ -385,7 +385,7 @@ export default function MessageItem({
                       }}
                       aria-label={`React ${emoji}`}
                       title={`React ${emoji}`}
-                      className="rounded-md px-1.5 py-1 text-base hover:bg-surface-hover"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-md text-base hover:bg-surface-hover"
                     >
                       {emoji}
                     </button>

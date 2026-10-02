@@ -9,18 +9,16 @@ import {
   ClipboardCheck,
   Clock3,
   MessageSquare,
-  MessageSquarePlus,
+  MessagesSquare,
   PanelsTopLeft,
-  Plus,
-  RotateCw,
   Search,
-  TriangleAlert,
   Users,
   UserRound,
   type LucideIcon,
 } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import { ACTIVITY_SELECT } from "@/components/activity/constants";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { createClient } from "@/lib/supabase/server";
 import type { ActivityFeedRow } from "@/types";
 
@@ -210,7 +208,7 @@ async function DashboardContent({
       </header>
 
       <section
-        className="grid grid-cols-2 gap-3 xl:grid-cols-4"
+        className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 xl:grid-cols-4"
         aria-label="Workspace summary"
       >
         <Summary
@@ -246,13 +244,15 @@ async function DashboardContent({
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
           <QuickAction
             href="/dashboard/messenger"
-            icon={<MessageSquarePlus aria-hidden="true" className="h-4 w-4" />}
-            label="New message"
+            icon={<MessagesSquare aria-hidden="true" className="h-4 w-4" />}
+            label="Open channels"
           />
           <QuickAction
             href={boards[0] ? `/dashboard/boards/${boards[0].id}` : "/dashboard/boards"}
-            icon={<Plus aria-hidden="true" className="h-4 w-4" />}
-            label={boards.length ? "Create a task" : "Create a board"}
+            icon={boards.length
+              ? <ClipboardCheck aria-hidden="true" className="h-4 w-4" />
+              : <MessagesSquare aria-hidden="true" className="h-4 w-4" />}
+            label={boards.length ? "Open task board" : "Open channels"}
           />
           <QuickAction
             href="/dashboard/ai"
@@ -263,7 +263,7 @@ async function DashboardContent({
             <QuickAction
               href={`/dashboard/boards/${ownerBoard.id}`}
               icon={<Users aria-hidden="true" className="h-4 w-4" />}
-              label="Invite a member"
+              label="Open team board"
             />
           )}
         </div>
@@ -574,14 +574,10 @@ function EmptyState({
 
 function DashboardError() {
   return (
-    <section role="alert" className="mx-auto max-w-xl rounded-xl border border-border bg-surface p-8 text-center">
-      <TriangleAlert aria-hidden="true" className="mx-auto h-8 w-8 text-muted" />
-      <h1 className="mt-3 text-lg font-semibold text-foreground">Something went wrong.</h1>
-      <p className="mt-1 text-sm text-muted">Your dashboard couldn&apos;t load. Please try again.</p>
-      <a href="/dashboard" className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary-hover">
-        <RotateCw aria-hidden="true" className="h-4 w-4" />Try again
-      </a>
-    </section>
+    <ErrorState
+      title="Dashboard couldn't load."
+      description="Your workspace overview is temporarily unavailable. Try again in a moment."
+    />
   );
 }
 
@@ -593,7 +589,7 @@ function DashboardSkeleton() {
         <div className="h-8 w-64 max-w-full rounded bg-surface-muted" />
         <div className="h-4 w-72 max-w-full rounded bg-surface-muted" />
       </div>
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }, (_, index) => (
           <div key={index} className="h-16 rounded-xl border border-border bg-surface" />
         ))}

@@ -90,7 +90,7 @@ export default function Column({
           title="Drag column"
           {...attributes}
           {...listeners}
-          className="cursor-grab rounded p-1 text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+          className="inline-flex h-11 w-11 shrink-0 cursor-grab items-center justify-center rounded-md text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
         >
           <GripVertical aria-hidden="true" className="h-4 w-4" />
         </button>
@@ -116,7 +116,7 @@ export default function Column({
             type="button"
             onClick={startEdit}
             title="Rename column"
-            className="min-w-0 flex-1 truncate rounded px-1 py-1 text-left text-sm font-semibold text-foreground hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-primary"
+            className="min-h-11 min-w-0 flex-1 truncate rounded px-1 py-1 text-left text-sm font-semibold text-foreground hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-primary"
           >
             {column.title}
           </button>
@@ -130,7 +130,7 @@ export default function Column({
           aria-label={`Delete ${column.title} column`}
           title="Delete column"
           onClick={() => onDelete(column.id)}
-          className="rounded-md p-1 text-muted hover:bg-danger-soft hover:text-danger focus-visible:outline-2 focus-visible:outline-danger"
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-muted hover:bg-danger-soft hover:text-danger focus-visible:outline-2 focus-visible:outline-danger"
         >
           <Trash2 aria-hidden="true" className="h-4 w-4" />
         </button>
@@ -159,7 +159,7 @@ export default function Column({
             className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted"
           />
           <div className="flex gap-2">
-            <button type="submit" disabled={!taskTitle.trim()} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50">
+            <button type="submit" disabled={!taskTitle.trim()} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50">
               <Plus aria-hidden="true" className="h-4 w-4" />Add task
             </button>
             <button
@@ -168,7 +168,7 @@ export default function Column({
                 setAdding(false);
                 setTaskTitle("");
               }}
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm text-foreground hover:bg-surface-hover"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-border px-3 text-sm text-foreground hover:bg-surface-hover"
             >
               <X aria-hidden="true" className="h-4 w-4" />Cancel
             </button>

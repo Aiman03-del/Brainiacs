@@ -10,8 +10,8 @@ export default function LoadingSettings() {
         <div className="h-8 w-36 animate-pulse rounded bg-surface-muted" />
         <div className="h-4 w-72 max-w-full animate-pulse rounded bg-surface-muted" />
       </div>
-      <div className="grid gap-6 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-10">
-        <div className="flex gap-2 border-b border-border pb-2 md:flex-col md:border-0">
+      <div className="grid gap-6 lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-10">
+        <div className="flex gap-2 border-b border-border pb-2 lg:flex-col lg:border-0">
           <div className="h-11 w-28 animate-pulse rounded-lg bg-surface-muted" />
           <div className="h-11 w-28 animate-pulse rounded-lg bg-surface-muted" />
         </div>

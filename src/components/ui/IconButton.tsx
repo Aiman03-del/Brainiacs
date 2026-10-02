@@ -23,7 +23,7 @@ export function IconButton({
       aria-label={label}
       title={label}
       className={cn(
-        "inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+        "inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border transition-colors active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100",
         variant === "danger"
           ? "text-danger hover:bg-danger-soft"
           : "text-muted hover:bg-surface-hover hover:text-foreground",

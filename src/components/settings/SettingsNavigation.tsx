@@ -25,7 +25,7 @@ export default function SettingsNavigation() {
   return (
     <nav
       aria-label="Settings sections"
-      className="flex gap-2 overflow-x-auto border-b border-border pb-2 md:flex-col md:overflow-visible md:border-0 md:pb-0"
+      className="flex gap-2 overflow-x-auto border-b border-border pb-2 lg:flex-col lg:overflow-visible lg:border-0 lg:pb-0"
     >
       {sections.map(({ id, label, icon: Icon }) => (
         <a

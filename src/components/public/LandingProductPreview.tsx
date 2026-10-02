@@ -35,7 +35,7 @@ export default function LandingProductPreview() {
             <span className="h-2.5 w-2.5 rounded-full bg-primary/50" />
             <span className="h-2.5 w-2.5 rounded-full bg-success/60" />
             <span className="ml-3 hidden text-xs text-muted sm:block">
-              brainiacs.app / workspace
+              brainiacs.app / sample workspace
             </span>
           </div>
 
@@ -45,7 +45,7 @@ export default function LandingProductPreview() {
                 <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
                   <LayoutDashboard aria-hidden="true" className="h-4 w-4" />
                 </span>
-                Northstar team
+                Your workspace
               </div>
               <div className="mt-7 space-y-5 text-xs">
                 <div>
@@ -78,7 +78,7 @@ export default function LandingProductPreview() {
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted">
                   <UsersRound aria-hidden="true" className="h-4 w-4" />
-                  <span>8 members</span>
+                  <span>Team members</span>
                 </div>
               </div>
 
@@ -91,14 +91,14 @@ export default function LandingProductPreview() {
                     </div>
                     <div className="space-y-3 rounded-xl border bg-background p-4">
                       <PreviewMessage
-                        initials="JM"
-                        name="Jordan M."
+                        initials="PL"
+                        name="Project lead"
                         time="10:24"
                         text="The first draft is ready for feedback. I&apos;ve added the key milestones to the board."
                       />
                       <PreviewMessage
-                        initials="AK"
-                        name="Alex K."
+                        initials="PD"
+                        name="Product designer"
                         time="10:31"
                         text="Great. I&apos;ll review the launch checklist this afternoon."
                       />
@@ -111,7 +111,7 @@ export default function LandingProductPreview() {
                         <Check aria-hidden="true" className="h-4 w-4 text-primary" />
                         Launch tasks
                       </div>
-                      <span className="text-xs text-muted">3 in progress</span>
+                      <span className="text-xs text-muted">Task status</span>
                     </div>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                       <PreviewColumn
@@ -152,8 +152,8 @@ export default function LandingProductPreview() {
                       Recent activity
                     </div>
                     <ul className="mt-3 space-y-3 text-xs text-muted">
-                      <li>Jordan moved “Landing page” to In progress</li>
-                      <li>Alex joined Product launch</li>
+                      <li>Landing page moved to In progress</li>
+                      <li>A teammate joined Product launch</li>
                       <li>Milestone checklist was updated</li>
                     </ul>
                   </section>

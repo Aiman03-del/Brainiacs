@@ -25,7 +25,7 @@ export default function BoardList({ boards }: BoardListProps) {
             href="/dashboard/search"
             aria-label="Search channels, messages, and people"
             title="Search workspace"
-            className="rounded-md p-2 text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-muted hover:bg-surface-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
           >
             <Search aria-hidden="true" className="h-4 w-4" />
           </Link>
@@ -87,7 +87,7 @@ export default function BoardList({ boards }: BoardListProps) {
         </h3>
         <div className="mt-3 flex items-center gap-2.5 rounded-md px-1 py-1">
           <MessageCircle aria-hidden="true" className="h-4 w-4 shrink-0 text-muted" />
-          <p className="text-sm text-muted">No conversations yet.</p>
+          <p className="text-sm text-muted">Direct messages aren&apos;t available yet.</p>
         </div>
       </section>
     </aside>
