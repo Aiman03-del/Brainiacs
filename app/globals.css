@@ -35,6 +35,10 @@
 
   /* Modal backdrop */
   --overlay: rgb(0 0 0 / 0.4);
+
+  /* Always-dark panels (landing hero, auth side panel) */
+  --inverse: #111827;
+  --inverse-foreground: #f9fafb;
 }
 
 /* ---------- Theme: dark ---------- */
@@ -66,10 +70,70 @@
   --overlay: rgb(0 0 0 / 0.6);
 }
 
-/* ---------- Theme: emerald (only changes the brand color) ---------- */
-[data-theme="emerald"] {
-  --primary: #059669;
-  --primary-hover: #047857;
+/* ---------- Accent colors: light theme ---------- */
+[data-accent="emerald"] {
+  --primary: #047857;
+  --primary-hover: #065f46;
+  --primary-soft: #ecfdf5;
+}
+
+[data-accent="violet"] {
+  --primary: #7c3aed;
+  --primary-hover: #6d28d9;
+  --primary-soft: #f5f3ff;
+}
+
+[data-accent="rose"] {
+  --primary: #e11d48;
+  --primary-hover: #be123c;
+  --primary-soft: #fff1f2;
+}
+
+[data-accent="amber"] {
+  --primary: #b45309;
+  --primary-hover: #92400e;
+  --primary-soft: #fffbeb;
+}
+
+[data-accent="teal"] {
+  --primary: #0f766e;
+  --primary-hover: #115e59;
+  --primary-soft: #f0fdfa;
+}
+
+/* ---------- Accent colors: dark theme ---------- */
+[data-theme="dark"][data-accent="emerald"] {
+  --primary: #34d399;
+  --primary-hover: #10b981;
+  --primary-soft: #064e3b;
+  --primary-foreground: #022c22;
+}
+
+[data-theme="dark"][data-accent="violet"] {
+  --primary: #8b5cf6;
+  --primary-hover: #7c3aed;
+  --primary-soft: #2e1065;
+}
+
+[data-theme="dark"][data-accent="rose"] {
+  --primary: #fb7185;
+  --primary-hover: #f43f5e;
+  --primary-soft: #4c0519;
+  --primary-foreground: #4c0519;
+}
+
+[data-theme="dark"][data-accent="amber"] {
+  --primary: #fbbf24;
+  --primary-hover: #f59e0b;
+  --primary-soft: #451a03;
+  --primary-foreground: #451a03;
+}
+
+[data-theme="dark"][data-accent="teal"] {
+  --primary: #2dd4bf;
+  --primary-hover: #14b8a6;
+  --primary-soft: #042f2e;
+  --primary-foreground: #042f2e;
 }
 
 @theme inline {
@@ -104,6 +168,8 @@
   --shadow-elev-3: 0 16px 48px rgb(17 24 39 / 0.2);
 
   --color-overlay: var(--overlay);
+  --color-inverse: var(--inverse);
+  --color-inverse-foreground: var(--inverse-foreground);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -158,4 +224,24 @@
   .landing-preview-enter {
     animation: none;
   }
+}
+
+/* ---------- Text size preference ---------- */
+html[data-text-size="small"] {
+  font-size: 14px;
+}
+
+html[data-text-size="large"] {
+  font-size: 18px;
+}
+
+/* ---------- Reduce motion preference ---------- */
+html[data-motion="reduce"] *,
+html[data-motion="reduce"] *::before,
+html[data-motion="reduce"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }

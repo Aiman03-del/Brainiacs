@@ -200,7 +200,9 @@ export default async function SettingsPage() {
               </ul>
             </div>
 
-            <PasswordForm email={accountEmail} requireCurrent={hasPasswordLogin} />
+            {hasPasswordLogin && (
+              <PasswordForm email={accountEmail} requireCurrent />
+            )}
 
             {hasPasswordLogin && <ChangeEmailForm currentEmail={accountEmail} />}
 
@@ -256,7 +258,10 @@ export default async function SettingsPage() {
               </a>
             </div>
 
-            <DeleteAccountForm requirePassword={hasPasswordLogin} />
+            <DeleteAccountForm
+              requirePassword={hasPasswordLogin}
+              blocked={!hasPasswordLogin}
+            />
           </section>
         </div>
       </div>

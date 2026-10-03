@@ -79,23 +79,23 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="bg-foreground text-background">
+      <section className="bg-inverse text-inverse-foreground">
         <div className="landing-enter mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 sm:py-20 lg:px-8 lg:py-24">
-          <p className="mx-auto inline-flex items-center gap-2 rounded-full border border-background/20 bg-background/10 px-3 py-1.5 text-xs font-semibold uppercase text-background sm:text-sm">
+          <p className="mx-auto inline-flex items-center gap-2 rounded-full border border-inverse-foreground/20 bg-inverse-foreground/10 px-3 py-1.5 text-xs font-semibold uppercase text-inverse-foreground sm:text-sm">
             <Activity aria-hidden="true" className="h-4 w-4 text-primary" />
             Modern Team Collaboration
           </p>
-          <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-bold text-background sm:text-5xl lg:text-6xl">
+          <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-bold text-inverse-foreground sm:text-5xl lg:text-6xl">
             Bring your team&apos;s work together.
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-background/75 sm:text-lg sm:leading-8">
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-inverse-foreground/75 sm:text-lg sm:leading-8">
             Brainiacs is a modern collaboration workspace for team conversations,
             tasks, AI assistance, and the progress that connects them.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Link
               href={entryHref}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-background"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-inverse-foreground"
             >
               {user ? "Open Dashboard" : "Get Started"}
               <ArrowRight aria-hidden="true" className="h-4 w-4" />
@@ -103,21 +103,21 @@ export default async function HomePage() {
             {user ? (
               <a
                 href="#features"
-                className="inline-flex min-h-12 items-center justify-center rounded-lg border border-background/25 px-6 text-sm font-semibold text-background transition-colors hover:bg-background/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-background"
+                className="inline-flex min-h-12 items-center justify-center rounded-lg border border-inverse-foreground/25 px-6 text-sm font-semibold text-inverse-foreground transition-colors hover:bg-inverse-foreground/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-inverse-foreground"
               >
                 Explore Features
               </a>
             ) : (
               <Link
                 href="/login"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-background/25 px-6 text-sm font-semibold text-background transition-colors hover:bg-background/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-background"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-inverse-foreground/25 px-6 text-sm font-semibold text-inverse-foreground transition-colors hover:bg-inverse-foreground/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-inverse-foreground"
               >
                 <LogIn aria-hidden="true" className="h-4 w-4" />
                 Sign In
               </Link>
             )}
           </div>
-          <p className="mt-5 text-xs text-background/60">
+          <p className="mt-5 text-xs text-inverse-foreground/60">
             One shared place for the conversations and work that move teams forward.
           </p>
         </div>

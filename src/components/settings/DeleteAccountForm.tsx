@@ -11,12 +11,14 @@ import { useConfirm } from "@/components/ui/confirm";
 
 interface DeleteAccountFormProps {
   requirePassword: boolean;
+  blocked?: boolean;
 }
 
 const CONFIRM_WORD = "DELETE";
 
 export default function DeleteAccountForm({
   requirePassword,
+  blocked = false,
 }: DeleteAccountFormProps) {
   const router = useRouter();
   const confirm = useConfirm();
@@ -84,6 +86,18 @@ export default function DeleteAccountForm({
 
   const fieldClass =
     "w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger";
+
+  if (blocked) {
+    return (
+      <div className="space-y-2 rounded-lg border border-border p-5">
+        <h3 className="text-base font-semibold text-foreground">Delete account</h3>
+        <p className="text-sm text-muted">
+          Account deletion is currently unavailable for accounts that sign in
+          only with Google. Please contact support to delete your account.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <form
