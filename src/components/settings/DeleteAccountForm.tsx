@@ -52,13 +52,17 @@ export default function DeleteAccountForm({
       const result: unknown = await response.json().catch(() => null);
 
       if (!response.ok) {
+        const providerReauthenticationUnavailable =
+          response.status === 403 && !requirePassword;
         setError(
-          typeof result === "object" &&
-            result !== null &&
-            "error" in result &&
-            typeof result.error === "string"
-            ? result.error
-            : "Unable to delete your account. Please try again.",
+          providerReauthenticationUnavailable
+            ? "Google account deletion is temporarily unavailable while secure verification is being implemented."
+            : typeof result === "object" &&
+                result !== null &&
+                "error" in result &&
+                typeof result.error === "string"
+              ? result.error
+              : "Unable to delete your account. Please try again.",
         );
         return;
       }

@@ -9,27 +9,174 @@ export const dynamic = "force-dynamic";
 const ATTACHMENT_BUCKET = "chat-attachments";
 const AVATAR_BUCKET = "avatars";
 const REMOVE_CHUNK = 100;
+const QUERY_PAGE_SIZE = 1000;
 const CONFIRM_WORD = "DELETE";
 
 type AdminClient = ReturnType<typeof createAdminClient>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isUnknownArray(value: unknown): value is unknown[] {
+  return Array.isArray(value);
+}
+
+function isSafePathSegment(segment: string): boolean {
+  return (
+    segment.length > 0 &&
+    segment !== "." &&
+    segment !== ".." &&
+    !segment.includes("\\") &&
+    !/[\u0000-\u001f\u007f]/.test(segment)
+  );
+}
+
+function isSafeStoragePath(path: string): boolean {
+  return (
+    path.length > 0 &&
+    !path.startsWith("/") &&
+    !path.includes("\\") &&
+    path.split("/").every(isSafePathSegment)
+  );
+}
+
+async function getUserAttachmentPaths(
+  admin: AdminClient,
+  userId: string,
+): Promise<Set<string> | null> {
+  const paths = new Set<string>();
+
+  try {
+    for (let offset = 0; ; offset += QUERY_PAGE_SIZE) {
+      const { data, error } = await admin
+        .from("messages")
+        .select("id, board_id, sender_id, attachments")
+        .eq("sender_id", userId)
+        .order("id", { ascending: true })
+        .range(offset, offset + QUERY_PAGE_SIZE - 1);
+      if (error) {
+        console.error("Unable to inspect account attachment records:", error.message);
+        return null;
+      }
+
+      for (const message of data) {
+        if (message.sender_id !== userId) {
+          console.error("Attachment query returned a message for another user.");
+          return null;
+        }
+
+        const attachmentData: unknown = message.attachments;
+        if (attachmentData === null) continue;
+        if (!isUnknownArray(attachmentData)) {
+          console.error("Account message contains malformed attachment metadata.");
+          return null;
+        }
+
+        for (const attachment of attachmentData) {
+          if (
+            !isRecord(attachment) ||
+            typeof attachment.path !== "string" ||
+            !isSafeStoragePath(attachment.path) ||
+            !attachment.path.startsWith(`${message.board_id}/`)
+          ) {
+            console.error("Account message contains an invalid attachment path.");
+            return null;
+          }
+          paths.add(attachment.path);
+        }
+      }
+
+      if (data.length < QUERY_PAGE_SIZE) break;
+    }
+  } catch (error: unknown) {
+    console.error("Unable to inspect account attachment records:", error);
+    return null;
+  }
+
+  return paths;
+}
+
+async function listFilesRecursively(
+  admin: AdminClient,
+  bucket: string,
+  rootPrefix: string,
+): Promise<string[] | null> {
+  const pendingPrefixes = [rootPrefix];
+  const visitedPrefixes = new Set<string>();
+  const paths: string[] = [];
+
+  try {
+    while (pendingPrefixes.length > 0) {
+      const prefix = pendingPrefixes.pop();
+      if (!prefix || visitedPrefixes.has(prefix)) continue;
+      visitedPrefixes.add(prefix);
+
+      for (let offset = 0; ; offset += QUERY_PAGE_SIZE) {
+        const { data, error } = await admin.storage.from(bucket).list(prefix, {
+          limit: QUERY_PAGE_SIZE,
+          offset,
+          sortBy: { column: "name", order: "asc" },
+        });
+        if (error) {
+          console.error(`Unable to list files from ${bucket}:`, error.message);
+          return null;
+        }
+
+        const entries = data ?? [];
+        for (const entry of entries) {
+          if (!isSafePathSegment(entry.name)) {
+            console.error(`Storage listing returned an invalid path in ${bucket}.`);
+            return null;
+          }
+
+          const path = `${prefix}/${entry.name}`;
+          if (!path.startsWith(`${rootPrefix}/`) || !isSafeStoragePath(path)) {
+            console.error(`Storage listing returned a path outside ${bucket}/${rootPrefix}.`);
+            return null;
+          }
+
+          if (entry.id === null) {
+            pendingPrefixes.push(path);
+          } else {
+            paths.push(path);
+          }
+        }
+
+        if (entries.length < QUERY_PAGE_SIZE) break;
+      }
+    }
+  } catch (error: unknown) {
+    console.error(`Unable to list files from ${bucket}:`, error);
+    return null;
+  }
+
+  return paths;
 }
 
 async function removeFiles(
   admin: AdminClient,
   bucket: string,
   paths: string[],
-): Promise<void> {
+): Promise<boolean> {
+  let succeeded = true;
+
   for (let index = 0; index < paths.length; index += REMOVE_CHUNK) {
-    const { error } = await admin.storage
-      .from(bucket)
-      .remove(paths.slice(index, index + REMOVE_CHUNK));
-    if (error) {
-      console.error(`Failed to remove files from ${bucket}:`, error.message);
+    try {
+      const { error } = await admin.storage
+        .from(bucket)
+        .remove(paths.slice(index, index + REMOVE_CHUNK));
+      if (error) {
+        console.error(`Failed to remove files from ${bucket}:`, error.message);
+        succeeded = false;
+      }
+    } catch (error: unknown) {
+      console.error(`Failed to remove files from ${bucket}:`, error);
+      succeeded = false;
     }
   }
+
+  return succeeded;
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -65,7 +212,18 @@ export async function POST(request: Request): Promise<Response> {
     ? user.identities.map((identity) => identity.provider)
     : (user.app_metadata?.providers ?? []);
 
-  if (providers.includes("email")) {
+  const hasEmailPasswordIdentity = providers.includes("email");
+  if (!hasEmailPasswordIdentity) {
+    return NextResponse.json(
+      {
+        error:
+          "Google reauthentication is required before deleting an OAuth-only account.",
+      },
+      { status: 403 },
+    );
+  }
+
+  if (hasEmailPasswordIdentity) {
     if (!password || !user.email) {
       return NextResponse.json(
         { error: "Enter your password to confirm." },
@@ -101,10 +259,34 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  const { data: attachmentPaths, error: dataError } = await admin.rpc(
-    "delete_user_data",
-    { p_user_id: user.id },
-  );
+  const userAttachmentPaths = await getUserAttachmentPaths(admin, user.id);
+  if (!userAttachmentPaths) {
+    return NextResponse.json(
+      { error: "Unable to verify your stored files. Please try again." },
+      { status: 500 },
+    );
+  }
+
+  const avatarPaths = await listFilesRecursively(admin, AVATAR_BUCKET, user.id);
+  if (!avatarPaths) {
+    return NextResponse.json(
+      { error: "Unable to inspect your profile photos. Please try again." },
+      { status: 500 },
+    );
+  }
+
+  let rpcResult;
+  try {
+    rpcResult = await admin.rpc("delete_user_data", { p_user_id: user.id });
+  } catch (error: unknown) {
+    console.error("delete_user_data request failed:", error);
+    return NextResponse.json(
+      { error: "Unable to delete your data. Please try again." },
+      { status: 500 },
+    );
+  }
+
+  const { data: attachmentPaths, error: dataError } = rpcResult;
   if (dataError) {
     console.error("delete_user_data failed:", dataError.message);
     return NextResponse.json(
@@ -113,20 +295,62 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  await removeFiles(admin, ATTACHMENT_BUCKET, attachmentPaths ?? []);
+  const rpcPaths: unknown = attachmentPaths;
+  if (
+    !isUnknownArray(rpcPaths) ||
+    !rpcPaths.every(
+      (path): path is string =>
+        typeof path === "string" && isSafeStoragePath(path),
+    )
+  ) {
+    console.error("delete_user_data returned an invalid attachment path list.");
+    return NextResponse.json(
+      { error: "Unable to verify your stored files. Please try again." },
+      { status: 500 },
+    );
+  }
 
-  const { data: avatarFiles } = await admin.storage
-    .from(AVATAR_BUCKET)
-    .list(user.id, { limit: 1000 });
-  await removeFiles(
-    admin,
-    AVATAR_BUCKET,
-    (avatarFiles ?? []).map((file) => `${user.id}/${file.name}`),
+  const requestedPaths = [...new Set(rpcPaths)];
+  const safeAttachmentPaths = requestedPaths.filter((path) =>
+    userAttachmentPaths.has(path),
   );
+  const skippedPathCount = requestedPaths.length - safeAttachmentPaths.length;
+  if (skippedPathCount > 0) {
+    console.warn(
+      `Skipped ${skippedPathCount} attachment path(s) not present in the user's messages.`,
+    );
+  }
 
-  const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
-  if (deleteError) {
-    console.error("deleteUser failed:", deleteError.message);
+  const attachmentsRemoved = await removeFiles(
+    admin,
+    ATTACHMENT_BUCKET,
+    safeAttachmentPaths,
+  );
+  const avatarsRemoved = await removeFiles(admin, AVATAR_BUCKET, avatarPaths);
+  if (!attachmentsRemoved || !avatarsRemoved) {
+    return NextResponse.json(
+      {
+        error:
+          "Account deletion could not be completed. Some files may remain; please try again.",
+      },
+      { status: 500 },
+    );
+  }
+
+  try {
+    const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
+    if (deleteError) {
+      console.error("deleteUser failed:", deleteError.message);
+      return NextResponse.json(
+        {
+          error:
+            "Your data was removed, but the account could not be fully deleted. Please try again.",
+        },
+        { status: 500 },
+      );
+    }
+  } catch (error: unknown) {
+    console.error("deleteUser request failed:", error);
     return NextResponse.json(
       {
         error:
